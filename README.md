@@ -8,7 +8,7 @@ VoxelObject {
 
 Volume {
 	chunks: HashMap<Chunk>,
-	meshes: HashMap<Mesh>,
+	surface_indexes: HashMap<usize>,
 	node: Ref<MeshInstance>,
 	mesh: Ref<ArrayMesh>,
 	surface_level: u8,
@@ -17,12 +17,8 @@ Volume {
 
 Chunk = Option<ChunkData>
 
-Mesh {
-	verts: PoolArray<Vector3>
-}
-
 ChunkData {
-	voxels: [u8; 32^3]
+	voxels: Box<[u8; 32^3]>
 }
 
 ```

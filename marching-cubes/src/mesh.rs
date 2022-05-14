@@ -92,9 +92,6 @@ pub fn generate(chunk: &ChunkData, surface_level: Voxel) -> VariantArray {
 					normals.push(normal);
 					normals.push(normal);
 					normals.push(normal);
-					// normals.push((vert_a - vert_c).cross(vert_b - vert_c));
-					// normals.push((vert_c - vert_b).cross(vert_a - vert_b));
-					// normals.push((vert_b - vert_a).cross(vert_c - vert_a));
 					i += 3;
 				}
 

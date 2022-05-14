@@ -11,10 +11,6 @@ pub type VPos = (i8, i8, i8);
 
 
 pub type Chunk = Option<ChunkData>;
-// pub enum Chunk {
-// 	Ready(ChunkData),
-// 	Empty,
-// }
 
 pub struct ChunkData {
 	voxels: Box<[Voxel; VOLUME]>,
