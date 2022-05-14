@@ -54,9 +54,7 @@ albedo_color = Color( 0, 1, 1, 1 )
 
 [node name="Sun" type="DirectionalLight" parent="."]
 transform = Transform( 0.866025, -0.383022, 0.321394, 0, 0.642787, 0.766045, -0.5, -0.663414, 0.556671, 0, 4, 0 )
-visible = false
 shadow_enabled = true
-shadow_bias = 0.0
 directional_shadow_mode = 1
 directional_shadow_normal_bias = 0.7
 directional_shadow_max_distance = 256.0
@@ -88,7 +86,7 @@ mesh = SubResource( 2 )
 material/0 = SubResource( 5 )
 
 [node name="Camera" parent="." instance=ExtResource( 2 )]
-transform = Transform( 0.573576, 0.469846, -0.67101, 0, 0.819152, 0.573577, 0.819152, -0.32899, 0.469846, -0.6, 3.75, 5 )
+transform = Transform( 0.707107, 0.40558, -0.579228, 0, 0.819152, 0.573577, 0.707107, -0.40558, 0.579228, 0, 32, 32 )
 far = 8192.0
 
 [node name="Crosshair" type="TextureRect" parent="."]

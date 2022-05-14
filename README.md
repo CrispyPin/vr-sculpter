@@ -15,10 +15,7 @@ Volume {
 	material: Ref<Material>,
 }
 
-enum Chunk {
-	Ready(ChunkData)
-	Empty
-}
+Chunk = Option<ChunkData>
 
 Mesh {
 	verts: PoolArray<Vector3>

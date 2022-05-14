@@ -73,13 +73,13 @@ pub fn to_local(world_pos: Vector3) -> VPos {
 }
 
 
-
-
 pub trait VPosT {
 	fn index(&self) -> usize;
 	fn vector(&self) -> Vector3;
 	fn from_index(index: usize) -> Self;
 	fn in_bounds(&self) -> bool;
+
+	fn add(&self, other: Self) -> Self;
 }
 
 impl VPosT for VPos {
@@ -109,5 +109,10 @@ impl VPosT for VPos {
 	#[inline]
 	fn vector(&self) -> Vector3 {
 		Vector3::new(self.0 as f32, self.1 as f32, self.2 as f32)
+	}
+
+	#[inline]
+	fn add(&self, other: Self) -> Self {
+		(self.0 + other.0, self.1 + other.1, self.2 + other.2)
 	}
 }
