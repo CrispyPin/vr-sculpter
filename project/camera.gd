@@ -5,11 +5,11 @@ export var speed_mod = 5.0
 export var sensitivity_h = 1.0
 export var sensitivity_v = 1.0
 
-var paused := true
+var paused := false
 var speed_current: float
 
 func _ready():
-#	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	pass
 
 func _input(event):

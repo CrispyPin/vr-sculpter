@@ -19,29 +19,12 @@ func _process(delta):
 		t_since_update = 0
 
 
-#	var result = raycast()
-	var result = {"hit": false}
 
 	if Input.is_action_just_pressed("place"):
-		if result.hit:
-			if world.get_voxel(result.pos + result.normal*0.5) == 0:
-				world.set_voxel(result.pos + result.normal*0.5, vtype)
+		world.brush_add(player.translation + forward() * 20, 15.0)
 
 	if Input.is_action_just_pressed("break"):
-		if result.hit:
-			world.set_voxel(result.pos - result.normal*0.4, 0)
-
-	if Input.is_action_just_released("next_item"):
-		vtype = ((vtype + 255) % 255) + 1
-	if Input.is_action_just_released("prev_item"):
-		vtype = ((vtype-2 + 255) % 255)+1
-
-
-func raycast():
-	var result = world.cast_ray(player.translation, forward(), 12.0)
-	indicator.translation = (result.pos - result.normal*0.5).floor()
-	indicator.visible = result.hit && enable_highlight
-	return result
+		world.brush_add(player.translation + forward() * 20, 5.0)
 
 
 func forward() -> Vector3:

@@ -16,7 +16,7 @@ impl VoxelObject {
 		Self {
 			volumes: Vec::new(),
 			active: 0,
-			time: 0.0,
+			time: 0f64,
 		}
 	}
 
@@ -26,10 +26,15 @@ impl VoxelObject {
 	}
 	
 	#[export]
-	fn _process(&mut self, _owner: &Spatial, _delta: f64) {
-		self.time += _delta;
-		self.volumes[0].surface_level = (f64::sin(self.time) * 50.0 + 160.0) as u8;
+	fn _process(&mut self, _owner: &Spatial, delta: f64) {
+		self.time += delta;
+		// self.volumes[0].surface_level = (f64::sin(self.time) * 50f64 + 160f64) as u8;
 		self.volumes[0].mesh_all();
+	}
+
+	#[export]
+	fn brush_add(&mut self, _owner: &Spatial, pos: Vector3, radius: f32) {
+		self.volumes[self.active].brush_add(pos, radius);
 	}
 
 	#[export]

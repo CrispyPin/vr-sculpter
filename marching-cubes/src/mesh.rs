@@ -16,7 +16,7 @@ const CORNERS: [VPos; 8] = [
 ];
 
 
-pub fn generate(chunk: &ChunkData, surface_level: Voxel) -> VariantArray {
+pub fn generate(chunk: &ChunkData, offset: Vector3, surface_level: Voxel) -> Option<VariantArray> {
 	let start_time = Instant::now();
 	let mut vertexes: PoolArray<Vector3> = PoolArray::new();
 	let mut normals: PoolArray<Vector3> = PoolArray::new();
@@ -92,7 +92,7 @@ pub fn generate(chunk: &ChunkData, surface_level: Voxel) -> VariantArray {
 
 				let triangles = TRIANGLES[cube_state as usize];
 				let mut i = 0;
-				let pos = (x as i8, y as i8, z as i8).vector();
+				let pos = (x as i8, y as i8, z as i8).vector() + offset;
 				while triangles[i] != 255 {
 					let vert_a = vertlist[triangles[i  ] as usize];
 					let vert_b = vertlist[triangles[i+1] as usize];
@@ -111,20 +111,24 @@ pub fn generate(chunk: &ChunkData, surface_level: Voxel) -> VariantArray {
 		}
 	}
 
+	if vert_count == 0 {
+		return None;
+	}
+
 	vertexes.resize(vert_count as i32);
 	normals.resize(vert_count as i32);
-	godot_print!("Took {} ms to generate.", start_time.elapsed().as_micros() as f64 / 1000.0);
+	// godot_print!("Took {} ms to generate.", start_time.elapsed().as_micros() as f64 / 1000.0);
 
 	let mesh_data = VariantArray::new_thread_local();
 	mesh_data.resize(Mesh::ARRAY_MAX as i32);
 	mesh_data.set(Mesh::ARRAY_VERTEX as i32, &vertexes);
 	mesh_data.set(Mesh::ARRAY_NORMAL as i32, &normals);
-	unsafe { mesh_data.assume_unique().into_shared() }
+	Some(unsafe { mesh_data.assume_unique().into_shared() })
 }
 
 
 fn interpolate_vert(surface_level: Voxel, corner_a: VPos, corner_b: VPos, value_a: Voxel, value_b: Voxel) -> Vector3 {
-	// (corner_a.vector() + corner_b.vector()) / 2.0
+	// return (corner_a.vector() + corner_b.vector()) / 2.0;
 	// if value_a == surface_level { return corner_a.vector() }
 	// if value_b == surface_level { return corner_b.vector() }
 	// if value_b == value_a { return corner_a.vector() }
