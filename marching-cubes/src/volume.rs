@@ -17,25 +17,21 @@ pub struct Volume {
 	material: Option<Ref<Material>>,
 }
 
+
 impl Volume {
 	pub fn new() -> Self {
 		let mesh = ArrayMesh::new().into_shared();
 		let mesh_node = unsafe { MeshInstance::new().into_shared().assume_safe() };
 		mesh_node.set_mesh(&mesh);
 		
-		let mut new = Self {
+		Self {
 			chunks: HashMap::new(),
 			surface_indexes: HashMap::new(),
 			node: mesh_node.claim(),
 			mesh,
 			material: None,
 			surface_level: 128,
-		};
-		let mut data = ChunkData::new();
-		data.sphere(Vector3::ONE * 15.0, 10.0, 255);
-		data.sphere(Vector3::ONE * 20.0, 6.0, 180);
-		new.chunks.insert((0,0,0), Some(data));
-		new
+		}
 	}
 
 	pub fn node(&self) -> Ref<MeshInstance> {
@@ -50,7 +46,7 @@ impl Volume {
 			for y in (-chunk_r)..(chunk_r+1) {
 				for z in (-chunk_r)..(chunk_r+1) {
 					let loc = center_chunk.add((x, y, z));
-					let chunk = self.ensure_chunk(loc).as_mut().unwrap();
+					let chunk = self.ensure_chunk(loc);
 					let local_pos = pos - loc.as_wpos();
 					chunk.sphere(local_pos, radius, 255);
 				}
@@ -62,13 +58,23 @@ impl Volume {
 		let mesh = unsafe { self.mesh.assume_safe() };
 		mesh.clear_surfaces();
 
-		for (&loc, c) in self.chunks.iter() {
-			if let Some(data) = c {
-				let offset = loc.as_wpos();
-				let mesh_data = mesh::generate(data, offset, self.surface_level);
-				if let Some(mesh_data) = mesh_data {
-					mesh.add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, mesh_data, VariantArray::new_shared(), 0);
-				}
+		for &loc in self.chunks.keys() {
+			let chunks = ChunkBox { contents: [
+				self.chunks.get(&loc),
+				self.chunks.get(&loc.add((1, 0, 0))),
+				self.chunks.get(&loc.add((0, 1, 0))),
+				self.chunks.get(&loc.add((1, 1, 0))),
+				self.chunks.get(&loc.add((0, 0, 1))),
+				self.chunks.get(&loc.add((1, 0, 1))),
+				self.chunks.get(&loc.add((0, 1, 1))),
+				self.chunks.get(&loc.add((1, 1, 1))),
+			]};
+
+			
+			let offset = loc.as_wpos();
+			let mesh_data = mesh::generate(chunks, offset, self.surface_level);
+			if let Some(mesh_data) = mesh_data {
+				mesh.add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, mesh_data, VariantArray::new_shared(), 0);
 			}
 		}
 	}
@@ -82,8 +88,7 @@ impl Volume {
 
 	fn create_chunk(&mut self, loc: ChunkLoc) {
 		godot_print!("added chunk at {:?}", loc);
-		let new = Some(ChunkData::new());
-		self.chunks.insert(loc, new);
+		self.chunks.insert(loc, Chunk::new());
 	}
 }
 

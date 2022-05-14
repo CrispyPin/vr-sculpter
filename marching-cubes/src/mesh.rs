@@ -16,7 +16,7 @@ const CORNERS: [VPos; 8] = [
 ];
 
 
-pub fn generate(chunk: &ChunkData, offset: Vector3, surface_level: Voxel) -> Option<VariantArray> {
+pub fn generate(chunks: ChunkBox, offset: Vector3, surface_level: Voxel) -> Option<VariantArray> {
 	let start_time = Instant::now();
 	let mut vertexes: PoolArray<Vector3> = PoolArray::new();
 	let mut normals: PoolArray<Vector3> = PoolArray::new();
@@ -31,7 +31,7 @@ pub fn generate(chunk: &ChunkData, offset: Vector3, surface_level: Voxel) -> Opt
 				let mut cube_values = [0; 8];
 				for i in 0..8 {
 					let pos = (x as i8, y as i8, z as i8).add(CORNERS[i]);
-					cube_values[i] = chunk.get(pos);
+					cube_values[i] = chunks.get(pos);
 					cube_state |= ((cube_values[i] >= surface_level) as u8) << i;
 				}
 

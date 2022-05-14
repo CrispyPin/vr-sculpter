@@ -10,14 +10,18 @@ pub type Voxel = u8;
 pub type VPos = (i8, i8, i8);
 
 
-pub type Chunk = Option<ChunkData>;
 
-pub struct ChunkData {
+pub struct ChunkBox<'a> {
+	pub contents: [Option<&'a Chunk>; 8]
+}
+
+
+pub struct Chunk {
 	voxels: Box<[Voxel; VOLUME]>,
 }
 
 
-impl ChunkData {
+impl Chunk {
 	pub fn new() -> Self {
 		Self {
 			voxels: vec![0u8; VOLUME].into_boxed_slice().try_into().unwrap(),
@@ -64,6 +68,34 @@ impl ChunkData {
 	}
 }
 
+
+impl ChunkBox<'_> {
+	// pub fn new(contents: [Option<&Chunk>; 8]) -> Self {
+	// 	Self { contents }
+	// }
+
+	pub fn get(&self, pos: VPos) -> Voxel {
+		let chunk_pos = pos.div(WIDTH_I8);
+		let local_pos = pos.modulo(WIDTH_I8);
+		let index = match chunk_pos {
+			(0, 0, 0) => 0,
+			(1, 0, 0) => 1,
+			(0, 1, 0) => 2,
+			(1, 1, 0) => 3,
+			(0, 0, 1) => 4,
+			(1, 0, 1) => 5,
+			(0, 1, 1) => 6,
+			(1, 1, 1) => 7,
+			_ => panic!("ChunkBox bounds exceeded")
+		};
+		if let Some(chunk) = self.contents[index] {
+			return chunk.get(local_pos);
+		}
+		0
+	}
+}
+
+
 #[inline]
 pub fn to_local(world_pos: Vector3) -> VPos {
 	let p = world_pos.posmod(WIDTH_F);
@@ -78,6 +110,8 @@ pub trait VPosT {
 	fn in_bounds(&self) -> bool;
 
 	fn add(&self, other: Self) -> Self;
+	fn div(&self, other: i8) -> Self;
+	fn modulo(&self, other: i8) -> Self;
 }
 
 impl VPosT for VPos {
@@ -112,5 +146,15 @@ impl VPosT for VPos {
 	#[inline]
 	fn add(&self, other: Self) -> Self {
 		(self.0 + other.0, self.1 + other.1, self.2 + other.2)
+	}
+
+	#[inline]
+	fn div(&self, other: i8) -> Self {
+		(self.0 / other, self.1 / other, self.2 / other)
+	}
+
+	#[inline]
+	fn modulo(&self, other: i8) -> Self {
+		(self.0 % other, self.1 % other, self.2 % other)
 	}
 }

@@ -15,9 +15,7 @@ Volume {
 	material: Ref<Material>,
 }
 
-Chunk = Option<ChunkData>
-
-ChunkData {
+Chunk {
 	voxels: Box<[u8; 32^3]>
 }
 
