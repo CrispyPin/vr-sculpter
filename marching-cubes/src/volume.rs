@@ -59,7 +59,7 @@ impl Volume {
 		mesh.clear_surfaces();
 
 		for &loc in self.chunks.keys() {
-			let chunks = ChunkBox { contents: [
+			let chunks = ChunkBox::new([
 				self.chunks.get(&loc),
 				self.chunks.get(&loc.add((1, 0, 0))),
 				self.chunks.get(&loc.add((0, 1, 0))),
@@ -68,7 +68,7 @@ impl Volume {
 				self.chunks.get(&loc.add((1, 0, 1))),
 				self.chunks.get(&loc.add((0, 1, 1))),
 				self.chunks.get(&loc.add((1, 1, 1))),
-			]};
+			]);
 
 			
 			let offset = loc.as_wpos();

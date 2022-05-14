@@ -12,7 +12,7 @@ pub type VPos = (i8, i8, i8);
 
 
 pub struct ChunkBox<'a> {
-	pub contents: [Option<&'a Chunk>; 8]
+	contents: [Option<&'a Chunk>; 8]
 }
 
 
@@ -69,10 +69,10 @@ impl Chunk {
 }
 
 
-impl ChunkBox<'_> {
-	// pub fn new(contents: [Option<&Chunk>; 8]) -> Self {
-	// 	Self { contents }
-	// }
+impl<'a> ChunkBox<'a> {
+	pub fn new(contents: [Option<&'a Chunk>; 8]) -> Self {
+		Self { contents }
+	}
 
 	pub fn get(&self, pos: VPos) -> Voxel {
 		let chunk_pos = pos.div(WIDTH_I8);
@@ -93,13 +93,6 @@ impl ChunkBox<'_> {
 		}
 		0
 	}
-}
-
-
-#[inline]
-pub fn to_local(world_pos: Vector3) -> VPos {
-	let p = world_pos.posmod(WIDTH_F);
-	(p.x as i8, p.y as i8, p.z as i8)
 }
 
 
