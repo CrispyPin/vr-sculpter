@@ -7,6 +7,7 @@ use crate::volume::*;
 pub struct VoxelObject {
 	volumes: Vec<Volume>,
 	active: usize,
+	time: f64,
 }
 
 #[methods]
@@ -15,6 +16,7 @@ impl VoxelObject {
 		Self {
 			volumes: Vec::new(),
 			active: 0,
+			time: 0.0,
 		}
 	}
 
@@ -25,6 +27,8 @@ impl VoxelObject {
 	
 	#[export]
 	fn _process(&mut self, _owner: &Spatial, _delta: f64) {
+		self.time += _delta;
+		self.volumes[0].surface_level = (f64::sin(self.time) * 50.0 + 160.0) as u8;
 		self.volumes[0].mesh_all();
 	}
 

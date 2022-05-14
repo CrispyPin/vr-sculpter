@@ -124,7 +124,20 @@ pub fn generate(chunk: &ChunkData, surface_level: Voxel) -> VariantArray {
 
 
 fn interpolate_vert(surface_level: Voxel, corner_a: VPos, corner_b: VPos, value_a: Voxel, value_b: Voxel) -> Vector3 {
-	(corner_a.vector() + corner_b.vector()) / 2.0
+	// (corner_a.vector() + corner_b.vector()) / 2.0
+	// if value_a == surface_level { return corner_a.vector() }
+	// if value_b == surface_level { return corner_b.vector() }
+	// if value_b == value_a { return corner_a.vector() }
+
+	let surface_level = surface_level as f32 / 255.0;
+	let value_a = value_a as f32 / 255.0;
+	let value_b = value_b as f32 / 255.0;
+	
+	let delta = (surface_level - value_a) / (value_b - value_a);
+
+	let pos_a = corner_a.vector();
+	let pos_b = corner_b.vector();
+	pos_a + delta * (pos_b - pos_a)
 }
 
 const EDGEMASK: [u16; 256]=[

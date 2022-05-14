@@ -13,7 +13,7 @@ pub struct Volume {
 	surface_indexes: HashMap<ChunkLoc, usize>,
 	node: Ref<MeshInstance>,
 	mesh: Ref<ArrayMesh>,
-	surface_level: u8,
+	pub surface_level: u8,
 	material: Option<Ref<Material>>,
 }
 
@@ -32,7 +32,8 @@ impl Volume {
 			surface_level: 128,
 		};
 		let mut data = ChunkData::new();
-		data.sphere(Vector3::new(15.0,15.0,15.0), 10.0, 255);
+		data.sphere(Vector3::ONE * 15.0, 10.0, 255);
+		data.sphere(Vector3::ONE * 10.0, 6.0, 180);
 		new.chunks.insert((0,0,0), Some(data));
 		new
 	}

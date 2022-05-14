@@ -28,9 +28,11 @@ impl ChunkData {
 		for i in 0..VOLUME {
 			let pos = VPos::from_index(i).vector();
 			let dist = pos.distance_to(center);
-			if dist < radius {
-				self.voxels[i] = value;
-			}
+			let v = (value as f32 / 255.0) * radius/dist * 0.5;
+			self.voxels[i] = self.voxels[i].max((v * 255.0) as Voxel);
+			// if dist < radius {
+			// 	self.voxels[i] = value;
+			// }
 		}
 	}
 
