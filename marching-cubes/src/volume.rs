@@ -1,5 +1,5 @@
 use gdnative::{prelude::*, api::{MeshInstance, ArrayMesh, Material, Mesh}};
-use std::collections::HashMap;
+use std::{collections::HashMap, mem};
 
 use crate::chunk::*;
 use crate::mesh;
@@ -10,7 +10,8 @@ pub type ChunkLoc = (i16, i16, i16);
 
 pub struct Volume {
 	chunks: HashMap<ChunkLoc, Chunk>,
-	surface_indexes: HashMap<ChunkLoc, usize>,
+	surface_indexes: HashMap<ChunkLoc, i64>,
+	modified: Vec<ChunkLoc>,
 	node: Ref<MeshInstance>,
 	mesh: Ref<ArrayMesh>,
 	pub surface_level: u8,
@@ -27,6 +28,7 @@ impl Volume {
 		Self {
 			chunks: HashMap::new(),
 			surface_indexes: HashMap::new(),
+			modified: Vec::new(),
 			node: mesh_node.claim(),
 			mesh,
 			material: None,
@@ -49,33 +51,60 @@ impl Volume {
 					let chunk = self.ensure_chunk(loc);
 					let local_pos = pos - loc.as_wpos();
 					chunk.sphere(local_pos, radius, 255);
+					self.modified.push(loc);
 				}
 			}
+		}
+	}
+
+	pub fn mesh_modified(&mut self) {
+		let modified = mem::take(&mut self.modified);
+		for loc in modified {
+			if self.surface_indexes.contains_key(&loc) {
+				let i = *self.surface_indexes.get(&loc).unwrap();
+				self.surface_indexes.values_mut().for_each(|x: &mut i64|
+					if *x > i {
+						*x -= 1;
+					}
+				);
+				unsafe { self.mesh.assume_safe().surface_remove(i) };
+			}
+			self.remesh_chunk(loc);
 		}
 	}
 
 	pub fn mesh_all(&mut self) {
 		let mesh = unsafe { self.mesh.assume_safe() };
 		mesh.clear_surfaces();
-
+		
+		let mut to_mesh = Vec::new();
 		for &loc in self.chunks.keys() {
-			let chunks = ChunkBox::new([
-				self.chunks.get(&loc),
-				self.chunks.get(&loc.add((1, 0, 0))),
-				self.chunks.get(&loc.add((0, 1, 0))),
-				self.chunks.get(&loc.add((1, 1, 0))),
-				self.chunks.get(&loc.add((0, 0, 1))),
-				self.chunks.get(&loc.add((1, 0, 1))),
-				self.chunks.get(&loc.add((0, 1, 1))),
-				self.chunks.get(&loc.add((1, 1, 1))),
-			]);
+			to_mesh.push(loc);
+		}
 
-			
-			let offset = loc.as_wpos();
-			let mesh_data = mesh::generate(chunks, offset, self.surface_level);
-			if let Some(mesh_data) = mesh_data {
-				mesh.add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, mesh_data, VariantArray::new_shared(), 0);
-			}
+		for loc in to_mesh {
+			self.remesh_chunk(loc);
+		}
+	}
+	
+	fn remesh_chunk(&mut self, loc: ChunkLoc) {
+		let mesh = unsafe { self.mesh.assume_safe() };
+		let chunks = ChunkBox::new([
+			self.chunks.get(&loc),
+			self.chunks.get(&loc.add((1, 0, 0))),
+			self.chunks.get(&loc.add((0, 1, 0))),
+			self.chunks.get(&loc.add((1, 1, 0))),
+			self.chunks.get(&loc.add((0, 0, 1))),
+			self.chunks.get(&loc.add((1, 0, 1))),
+			self.chunks.get(&loc.add((0, 1, 1))),
+			self.chunks.get(&loc.add((1, 1, 1))),
+		]);
+
+		let offset = loc.as_wpos();
+		let mesh_data = mesh::generate(chunks, offset, self.surface_level);
+		if let Some(mesh_data) = mesh_data {
+			self.surface_indexes.insert(loc, mesh.get_surface_count());
+			mesh.add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, mesh_data, VariantArray::new_shared(), 0);
 		}
 	}
 

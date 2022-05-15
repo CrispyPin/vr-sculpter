@@ -29,7 +29,7 @@ impl VoxelObject {
 	fn _process(&mut self, _owner: &Spatial, delta: f64) {
 		self.time += delta;
 		// self.volumes[0].surface_level = (f64::sin(self.time) * 50f64 + 160f64) as u8;
-		self.volumes[0].mesh_all();
+		self.volumes[0].mesh_modified();
 	}
 
 	#[export]
