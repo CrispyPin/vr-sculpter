@@ -1,6 +1,7 @@
 use gdnative::prelude::*;
 
 use crate::volume::*;
+use crate::chunk::*;
 
 #[derive(NativeClass)]
 #[inherit(Spatial)]
@@ -33,8 +34,8 @@ impl VoxelObject {
 	}
 
 	#[export]
-	fn brush_add(&mut self, _owner: &Spatial, pos: Vector3, radius: f32) {
-		self.volumes[self.active].brush_add(pos, radius);
+	fn set_sphere(&mut self, _owner: &Spatial, pos: Vector3, radius: f32, value: Voxel) {
+		self.volumes[self.active].set_sphere(pos, radius, value);
 	}
 
 	#[export]

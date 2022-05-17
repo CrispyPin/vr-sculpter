@@ -20,11 +20,11 @@ func _process(delta):
 
 
 
-	if Input.is_action_just_pressed("place"):
-		world.brush_add(player.translation + forward() * 20, 15.0)
+	if Input.is_action_pressed("place"):
+		world.set_sphere(player.translation + forward() * 40, 25.0, 255)
 
-	if Input.is_action_just_pressed("break"):
-		world.brush_add(player.translation + forward() * 20, 5.0)
+	if Input.is_action_pressed("break"):
+		world.set_sphere(player.translation + forward() * 20, 5.0, 0)
 
 
 func forward() -> Vector3:

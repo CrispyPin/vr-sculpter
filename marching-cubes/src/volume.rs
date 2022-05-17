@@ -40,7 +40,7 @@ impl Volume {
 		self.node
 	}
 
-	pub fn brush_add(&mut self, pos: Vector3, radius: f32) {
+	pub fn set_sphere(&mut self, pos: Vector3, radius: f32, value: Voxel) {
 		let center_chunk = ChunkLoc::from_wpos(pos);
 		let chunk_r = (radius / WIDTH_F) as i16 + 1;
 
@@ -50,7 +50,7 @@ impl Volume {
 					let loc = center_chunk.add((x, y, z));
 					let chunk = self.ensure_chunk(loc);
 					let local_pos = pos - loc.as_wpos();
-					chunk.sphere(local_pos, radius, 255);
+					chunk.set_sphere(local_pos, radius, value);
 					self.modified.push(loc);
 				}
 			}
@@ -67,6 +67,7 @@ impl Volume {
 						*x -= 1;
 					}
 				);
+				self.surface_indexes.remove(&loc);
 				unsafe { self.mesh.assume_safe().surface_remove(i) };
 			}
 			self.remesh_chunk(loc);
@@ -89,16 +90,7 @@ impl Volume {
 	
 	fn remesh_chunk(&mut self, loc: ChunkLoc) {
 		let mesh = unsafe { self.mesh.assume_safe() };
-		let chunks = ChunkBox::new([
-			self.chunks.get(&loc),
-			self.chunks.get(&loc.add((1, 0, 0))),
-			self.chunks.get(&loc.add((0, 1, 0))),
-			self.chunks.get(&loc.add((1, 1, 0))),
-			self.chunks.get(&loc.add((0, 0, 1))),
-			self.chunks.get(&loc.add((1, 0, 1))),
-			self.chunks.get(&loc.add((0, 1, 1))),
-			self.chunks.get(&loc.add((1, 1, 1))),
-		]);
+		let chunks = ChunkBox2::new(&self.chunks, loc);
 
 		let offset = loc.as_wpos();
 		let mesh_data = mesh::generate(chunks, offset, self.surface_level);
@@ -116,7 +108,6 @@ impl Volume {
 	}
 
 	fn create_chunk(&mut self, loc: ChunkLoc) {
-		godot_print!("added chunk at {:?}", loc);
 		self.chunks.insert(loc, Chunk::new());
 	}
 }

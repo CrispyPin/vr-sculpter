@@ -16,7 +16,7 @@ const CORNERS: [VPos; 8] = [
 ];
 
 
-pub fn generate(chunks: ChunkBox, offset: Vector3, surface_level: Voxel) -> Option<VariantArray> {
+pub fn generate(chunks: ChunkBox2, offset: Vector3, surface_level: Voxel) -> Option<VariantArray> {
 	let start_time = Instant::now();
 	let mut vertexes: PoolArray<Vector3> = PoolArray::new();
 	let mut normals: PoolArray<Vector3> = PoolArray::new();

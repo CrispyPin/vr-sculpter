@@ -1,4 +1,9 @@
+use std::collections::HashMap;
+
 use gdnative::prelude::*;
+
+use crate::volume::ChunkLoc;
+use crate::volume::ChunkLocT;
 
 pub const WIDTH: usize = 32;
 pub const WIDTH_F: f32 = WIDTH as f32;
@@ -10,9 +15,15 @@ pub type Voxel = u8;
 pub type VPos = (i8, i8, i8);
 
 
-
-pub struct ChunkBox<'a> {
+/// 2x2x2 chunk references
+pub struct ChunkBox2<'a> {
 	contents: [Option<&'a Chunk>; 8]
+}
+
+
+/// 3x3x3 chunk references
+pub struct ChunkBox3<'a> {
+	contents: [Option<&'a Chunk>; 27]
 }
 
 
@@ -28,15 +39,13 @@ impl Chunk {
 		}
 	}
 	
-	pub fn sphere(&mut self, center: Vector3, radius: f32, value: Voxel) {
+	pub fn set_sphere(&mut self, center: Vector3, radius: f32, value: Voxel) {
 		for i in 0..VOLUME {
 			let pos = VPos::from_index(i).vector();
 			let dist = pos.distance_to(center);
-			let v = (value as f32 / 255.0) * radius/dist * 0.5;
-			self.voxels[i] = self.voxels[i].max((v * 255.0) as Voxel);
-			// if dist < radius {
-			// 	self.voxels[i] = value;
-			// }
+			if dist <= radius {
+				self.voxels[i] = value;
+			}
 		}
 	}
 
@@ -69,9 +78,19 @@ impl Chunk {
 }
 
 
-impl<'a> ChunkBox<'a> {
-	pub fn new(contents: [Option<&'a Chunk>; 8]) -> Self {
-		Self { contents }
+impl<'a> ChunkBox2<'a> {
+	pub fn new(chunks: &'a HashMap<ChunkLoc, Chunk>, loc: ChunkLoc) -> Self {
+		Self {
+			contents: [
+			chunks.get(&loc),
+			chunks.get(&loc.add((1, 0, 0))),
+			chunks.get(&loc.add((0, 1, 0))),
+			chunks.get(&loc.add((1, 1, 0))),
+			chunks.get(&loc.add((0, 0, 1))),
+			chunks.get(&loc.add((1, 0, 1))),
+			chunks.get(&loc.add((0, 1, 1))),
+			chunks.get(&loc.add((1, 1, 1))),
+		]}
 	}
 
 	pub fn get(&self, pos: VPos) -> Voxel {
@@ -86,7 +105,82 @@ impl<'a> ChunkBox<'a> {
 			(1, 0, 1) => 5,
 			(0, 1, 1) => 6,
 			(1, 1, 1) => 7,
-			_ => panic!("ChunkBox bounds exceeded")
+			_ => panic!("ChunkBox2 bounds exceeded")
+		};
+		if let Some(chunk) = self.contents[index] {
+			return chunk.get(local_pos);
+		}
+		0
+	}
+}
+
+
+impl<'a> ChunkBox3<'a> {
+	pub fn new(chunks: &'a HashMap<ChunkLoc, Chunk>, loc: ChunkLoc) -> Self {
+		Self {
+			contents: [
+				chunks.get(&loc.add((-1, -1, -1))),
+				chunks.get(&loc.add((0, -1, -1))),
+				chunks.get(&loc.add((1, -1, -1))),
+				chunks.get(&loc.add((-1, 0, -1))),
+				chunks.get(&loc.add((0, 0, -1))),
+				chunks.get(&loc.add((1, 0, -1))),
+				chunks.get(&loc.add((-1, 1, -1))),
+				chunks.get(&loc.add((0, 1, -1))),
+				chunks.get(&loc.add((1, 1, -1))),
+				chunks.get(&loc.add((-1, -1, 0))),
+				chunks.get(&loc.add((0, -1, 0))),
+				chunks.get(&loc.add((1, -1, 0))),
+				chunks.get(&loc.add((-1, 0, 0))),
+				chunks.get(&loc.add((0, 0, 0))),
+				chunks.get(&loc.add((1, 0, 0))),
+				chunks.get(&loc.add((-1, 1, 0))),
+				chunks.get(&loc.add((0, 1, 0))),
+				chunks.get(&loc.add((1, 1, 0))),
+				chunks.get(&loc.add((-1, -1, 1))),
+				chunks.get(&loc.add((0, -1, 1))),
+				chunks.get(&loc.add((1, -1, 1))),
+				chunks.get(&loc.add((-1, 0, 1))),
+				chunks.get(&loc.add((0, 0, 1))),
+				chunks.get(&loc.add((1, 0, 1))),
+				chunks.get(&loc.add((-1, 1, 1))),
+				chunks.get(&loc.add((0, 1, 1))),
+				chunks.get(&loc.add((1, 1, 1))),
+		]}
+	}
+
+	pub fn get(&self, pos: VPos) -> Voxel {
+		let chunk_pos = pos.div(WIDTH_I8);
+		let local_pos = pos.modulo(WIDTH_I8);
+		let index = match chunk_pos {
+			(-1, -1, -1) => 0,
+			(0, -1, -1) => 1,
+			(1, -1, -1) => 2,
+			(-1, 0, -1) => 3,
+			(0, 0, -1) => 4,
+			(1, 0, -1) => 5,
+			(-1, 1, -1) => 6,
+			(0, 1, -1) => 7,
+			(1, 1, -1) => 8,
+			(-1, -1, 0) => 9,
+			(0, -1, 0) => 10,
+			(1, -1, 0) => 11,
+			(-1, 0, 0) => 12,
+			(0, 0, 0) => 13,
+			(1, 0, 0) => 14,
+			(-1, 1, 0) => 15,
+			(0, 1, 0) => 16,
+			(1, 1, 0) => 17,
+			(-1, -1, 1) => 18,
+			(0, -1, 1) => 19,
+			(1, -1, 1) => 20,
+			(-1, 0, 1) => 21,
+			(0, 0, 1) => 22,
+			(1, 0, 1) => 23,
+			(-1, 1, 1) => 24,
+			(0, 1, 1) => 25,
+			(1, 1, 1) => 26,
+			_ => panic!("ChunkBox3 bounds exceeded")
 		};
 		if let Some(chunk) = self.contents[index] {
 			return chunk.get(local_pos);
