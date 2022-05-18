@@ -41,19 +41,31 @@ impl Volume {
 	}
 
 	pub fn set_sphere(&mut self, pos: Vector3, radius: f32, value: Voxel) {
-		let center_chunk = ChunkLoc::from_wpos(pos);
-		let chunk_r = (radius / WIDTH_F) as i16 + 1;
+		let locs = locs_in_sphere(pos, radius);
+		for loc in locs {
+			let chunk = self.ensure_chunk(loc);
+			let local_pos = pos - loc.as_wpos();
+			chunk.set_sphere(local_pos, radius, value);
+			self.modified.push(loc);
+		}
+	}
 
-		for x in (-chunk_r)..(chunk_r+1) {
-			for y in (-chunk_r)..(chunk_r+1) {
-				for z in (-chunk_r)..(chunk_r+1) {
-					let loc = center_chunk.add((x, y, z));
-					let chunk = self.ensure_chunk(loc);
-					let local_pos = pos - loc.as_wpos();
-					chunk.set_sphere(local_pos, radius, value);
-					self.modified.push(loc);
-				}
+	pub fn smooth(&mut self, pos: Vector3, radius: f32) {
+		let locs = locs_in_sphere(pos, radius);
+		let mut new_chunks = Vec::new();
+
+		for loc in locs {
+			if !self.chunks.contains_key(&loc) {
+				continue;
 			}
+			let local_pos = pos - loc.as_wpos();
+			let neighbors = ChunkBox3::new(&self.chunks, loc);
+			let new_chunk = Chunk::smooth_sphere(neighbors, local_pos, radius);
+			new_chunks.push((loc, new_chunk));
+		}
+		for (loc, chunk) in new_chunks {
+			self.chunks.insert(loc, chunk);
+			self.modified.push(loc);
 		}
 	}
 
@@ -110,6 +122,22 @@ impl Volume {
 	fn create_chunk(&mut self, loc: ChunkLoc) {
 		self.chunks.insert(loc, Chunk::new());
 	}
+}
+
+fn locs_in_sphere(pos: Vector3, radius: f32) -> Vec<ChunkLoc> {
+	let center = ChunkLoc::from_wpos(pos);
+	let chunk_r = (radius / WIDTH_F) as i16 + 1;
+	let mut out = Vec::new();
+
+	for x in (-chunk_r)..(chunk_r+1) {
+		for y in (-chunk_r)..(chunk_r+1) {
+			for z in (-chunk_r)..(chunk_r+1) {
+				let loc = center.add((x, y, z));
+				out.push(loc);
+			}
+		}
+	}
+	out
 }
 
 pub trait ChunkLocT {

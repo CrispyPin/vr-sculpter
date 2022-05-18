@@ -69,7 +69,6 @@ mesh = ExtResource( 5 )
 material/0 = null
 
 [node name="Axis" type="Spatial" parent="HighlightBox"]
-visible = false
 
 [node name="origin" type="MeshInstance" parent="HighlightBox/Axis"]
 mesh = SubResource( 2 )

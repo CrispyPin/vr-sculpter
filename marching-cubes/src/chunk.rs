@@ -49,6 +49,26 @@ impl Chunk {
 		}
 	}
 
+	pub fn smooth_sphere(old: ChunkBox3, center: Vector3, radius: f32) -> Self {
+		let mut new = Self::new();
+		for i in 0..VOLUME {
+			let pos = VPos::from_index(i);
+			let dist = pos.vector().distance_to(center);
+			let mut new_val = old.get(pos) as u16;
+			if dist <= radius {
+				new_val += old.get(pos.add((1, 0, 0))) as u16;
+				new_val += old.get(pos.add((-1, 0, 0))) as u16;
+				new_val += old.get(pos.add((0, 1, 0))) as u16;
+				new_val += old.get(pos.add((0, -1, 0))) as u16;
+				new_val += old.get(pos.add((0, 0, 1))) as u16;
+				new_val += old.get(pos.add((0, 0, -1))) as u16;
+				new_val /= 7;
+			}
+			new.voxels[i] = new_val as Voxel;
+		}
+		new
+	}
+
 	#[inline]
 	pub fn get(&self, pos: VPos) -> Voxel {
 		if pos.in_bounds() {
@@ -151,7 +171,6 @@ impl<'a> ChunkBox3<'a> {
 
 	pub fn get(&self, pos: VPos) -> Voxel {
 		let chunk_pos = pos.div(WIDTH_I8);
-		let local_pos = pos.modulo(WIDTH_I8);
 		let index = match chunk_pos {
 			(-1, -1, -1) => 0,
 			(0, -1, -1) => 1,
@@ -183,6 +202,7 @@ impl<'a> ChunkBox3<'a> {
 			_ => panic!("ChunkBox3 bounds exceeded")
 		};
 		if let Some(chunk) = self.contents[index] {
+			let local_pos = pos.posmod(WIDTH_I8);
 			return chunk.get(local_pos);
 		}
 		0
@@ -199,6 +219,7 @@ pub trait VPosT {
 	fn add(&self, other: Self) -> Self;
 	fn div(&self, other: i8) -> Self;
 	fn modulo(&self, other: i8) -> Self;
+	fn posmod(&self, other: i8) -> Self;
 }
 
 impl VPosT for VPos {
@@ -237,11 +258,16 @@ impl VPosT for VPos {
 
 	#[inline]
 	fn div(&self, other: i8) -> Self {
-		(self.0 / other, self.1 / other, self.2 / other)
+		(self.0.div_euclid(other), self.1.div_euclid(other), self.2.div_euclid(other))
 	}
 
 	#[inline]
 	fn modulo(&self, other: i8) -> Self {
 		(self.0 % other, self.1 % other, self.2 % other)
+	}
+
+	#[inline]
+	fn posmod(&self, other: i8) -> Self {
+		self.add((other, other, other)).modulo(other)
 	}
 }
