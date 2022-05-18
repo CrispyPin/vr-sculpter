@@ -1,5 +1,17 @@
 # marching-cubes
 
+## Todo:
+- [X] marching cubes meshing
+- [X] smoothing
+- [ ] multithreading mesh generation
+- [ ] multithreading smooth operations
+- [ ] smoothing with bigger radius
+- [ ] name
+- [ ] VR support
+- [ ] saving/loading
+- [ ] exporting mesh
+
+
 ## structure: 
 ```
 VoxelObject {

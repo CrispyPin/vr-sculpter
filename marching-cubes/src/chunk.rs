@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-
 use gdnative::prelude::*;
 
 use crate::volume::ChunkLoc;
