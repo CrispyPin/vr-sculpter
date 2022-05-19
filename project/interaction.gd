@@ -15,7 +15,7 @@ func _ready():
 	world.smooth_sphere(Vector3(0,0,0), 34.0)
 
 
-func _process(delta):
+func _process(_delta):
 	if Input.is_action_pressed("place"):
 		world.set_sphere(player.translation + forward() * 20, 5.0, 255)
 		world.smooth_sphere(player.translation + forward() * 20, 7.0)

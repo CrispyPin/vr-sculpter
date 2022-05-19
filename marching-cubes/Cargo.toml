@@ -10,3 +10,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 gdnative = "0.10.0"
+rayon = "1.5.3"

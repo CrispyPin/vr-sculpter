@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use gdnative::{prelude::*, api::Mesh};
 
 use crate::chunk::*;
@@ -17,7 +15,6 @@ const CORNERS: [VPos; 8] = [
 
 
 pub fn generate(chunks: ChunkBox2, offset: Vector3, surface_level: Voxel) -> Option<VariantArray> {
-	let start_time = Instant::now();
 	let mut vertexes: PoolArray<Vector3> = PoolArray::new();
 	let mut normals: PoolArray<Vector3> = PoolArray::new();
 
@@ -117,7 +114,6 @@ pub fn generate(chunks: ChunkBox2, offset: Vector3, surface_level: Voxel) -> Opt
 
 	vertexes.resize(vert_count as i32);
 	normals.resize(vert_count as i32);
-	// godot_print!("Took {} ms to generate.", start_time.elapsed().as_micros() as f64 / 1000.0);
 
 	let mesh_data = VariantArray::new_thread_local();
 	mesh_data.resize(Mesh::ARRAY_MAX as i32);

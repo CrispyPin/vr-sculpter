@@ -3,8 +3,8 @@
 ## Todo:
 - [X] marching cubes meshing
 - [X] smoothing
-- [ ] multithreading mesh generation
-- [ ] multithreading smooth operations
+- [X] multithreaded mesh generation
+- [X] multithreaded smoothing operations
 - [ ] smoothing with bigger radius
 - [ ] name
 - [ ] VR support

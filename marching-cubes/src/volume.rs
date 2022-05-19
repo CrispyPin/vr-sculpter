@@ -1,5 +1,6 @@
 use gdnative::{prelude::*, api::{MeshInstance, ArrayMesh, Material, Mesh}};
-use std::{collections::HashMap, mem};
+use rayon::prelude::*;
+use std::{collections::HashMap, mem, time::Instant};
 
 use crate::chunk::*;
 use crate::mesh;
@@ -51,65 +52,67 @@ impl Volume {
 	}
 
 	pub fn smooth(&mut self, pos: Vector3, radius: f32) {
-		let locs = locs_in_sphere(pos, radius);
-		let mut new_chunks = Vec::new();
+		let start = Instant::now();
 
-		for loc in locs {
-			if !self.chunks.contains_key(&loc) {
-				continue;
+		let locs = locs_in_sphere(pos, radius);
+
+		let new_chunks: Vec<Option<(&ChunkLoc, Chunk)>> = locs.par_iter().map(|loc| {
+			if !self.chunks.contains_key(loc) {
+				return None;
 			}
 			let local_pos = pos - loc.as_wpos();
-			let neighbors = ChunkBox3::new(&self.chunks, loc);
+			let neighbors = ChunkBox3::new(&self.chunks, *loc);
 			let new_chunk = Chunk::smooth_sphere(neighbors, local_pos, radius);
-			new_chunks.push((loc, new_chunk));
-		}
-		for (loc, chunk) in new_chunks {
+			Some((loc, new_chunk))
+		}).collect();
+
+		for (&loc, chunk) in new_chunks.into_iter().flatten() {
 			self.chunks.insert(loc, chunk);
 			self.modified.push(loc);
 		}
+		godot_print!("smoothing took: {}ms", start.elapsed().as_micros() as f32 / 1000.0);
 	}
-
+	
 	pub fn mesh_modified(&mut self) {
-		let modified = mem::take(&mut self.modified);
-		for loc in modified {
-			if self.surface_indexes.contains_key(&loc) {
-				let i = *self.surface_indexes.get(&loc).unwrap();
+		let start = Instant::now();
+		let array_mesh: TRef<ArrayMesh> = unsafe { self.mesh.assume_safe() };
+		if self.modified.is_empty() {
+			return;
+		}
+
+		let mut modified = mem::take(&mut self.modified);
+		modified.sort_unstable();
+		modified.dedup();
+		
+		for loc in &modified {
+			if self.surface_indexes.contains_key(loc) {
+				// "move" indexes down one if they come after this surface, since it will be removed
+				let &i = self.surface_indexes.get(loc).unwrap();
+				
 				self.surface_indexes.values_mut().for_each(|x: &mut i64|
 					if *x > i {
 						*x -= 1;
 					}
 				);
-				self.surface_indexes.remove(&loc);
-				unsafe { self.mesh.assume_safe().surface_remove(i) };
+				// remove this chunks surface
+				self.surface_indexes.remove(loc);
+				array_mesh.surface_remove(i);
 			}
-			self.remesh_chunk(loc);
 		}
-	}
-
-	pub fn mesh_all(&mut self) {
-		let mesh = unsafe { self.mesh.assume_safe() };
-		mesh.clear_surfaces();
+		let meshes:Vec<(ChunkLoc, Option<VariantArray>)> = modified.par_iter().map(|&loc| {
+			let offset = loc.as_wpos();
+			let chunks = ChunkBox2::new(&self.chunks, loc);
+			(loc, mesh::generate(chunks, offset, self.surface_level))
+		}).collect();
 		
-		let mut to_mesh = Vec::new();
-		for &loc in self.chunks.keys() {
-			to_mesh.push(loc);
-		}
-
-		for loc in to_mesh {
-			self.remesh_chunk(loc);
-		}
-	}
-	
-	fn remesh_chunk(&mut self, loc: ChunkLoc) {
 		let mesh = unsafe { self.mesh.assume_safe() };
-		let chunks = ChunkBox2::new(&self.chunks, loc);
-
-		let offset = loc.as_wpos();
-		let mesh_data = mesh::generate(chunks, offset, self.surface_level);
-		if let Some(mesh_data) = mesh_data {
-			self.surface_indexes.insert(loc, mesh.get_surface_count());
-			mesh.add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, mesh_data, VariantArray::new_shared(), 0);
+		for mesh_data in meshes {
+			if let (loc, Some(mesh_arr)) = mesh_data {
+				self.surface_indexes.insert(loc, mesh.get_surface_count());
+				mesh.add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, mesh_arr, VariantArray::new_shared(), 0);
+			}
 		}
+		godot_print!("meshes took: {}ms", start.elapsed().as_micros() as f32 / 1000.0);
 	}
 
 	fn ensure_chunk(&mut self, loc: ChunkLoc) -> &mut Chunk{
