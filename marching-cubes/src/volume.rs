@@ -5,6 +5,9 @@ use std::{collections::HashMap, mem, time::Instant};
 use crate::chunk::*;
 use crate::mesh;
 
+const DEBUG_MESH_TIMES: bool = false;
+const DEBUG_SMOOTH_TIMES: bool = false;
+
 
 pub type ChunkLoc = (i16, i16, i16);
 
@@ -70,7 +73,9 @@ impl Volume {
 			self.chunks.insert(loc, chunk);
 			self.modified.push(loc);
 		}
-		godot_print!("smoothing took: {}ms", start.elapsed().as_micros() as f32 / 1000.0);
+		if DEBUG_SMOOTH_TIMES {
+			godot_print!("smoothing took: {}ms", start.elapsed().as_micros() as f32 / 1000.0);
+		}
 	}
 	
 	pub fn mesh_modified(&mut self) {
@@ -112,7 +117,9 @@ impl Volume {
 				mesh.add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, mesh_arr, VariantArray::new_shared(), 0);
 			}
 		}
-		godot_print!("meshes took: {}ms", start.elapsed().as_micros() as f32 / 1000.0);
+		if DEBUG_MESH_TIMES {
+			godot_print!("meshes took: {}ms", start.elapsed().as_micros() as f32 / 1000.0);
+		}
 	}
 
 	fn ensure_chunk(&mut self, loc: ChunkLoc) -> &mut Chunk{
