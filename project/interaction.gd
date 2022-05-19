@@ -24,6 +24,11 @@ func _process(_delta):
 		world.set_sphere(player.translation + forward() * 20, 5.0, 0)
 		world.smooth_sphere(player.translation + forward() * 20, 7.0)
 
+	if Input.is_action_just_pressed("f1"):
+		world.save()
+
+	if Input.is_action_just_pressed("f2"):
+		world.load()
 
 func forward() -> Vector3:
 	return (global_transform.origin - player.translation).normalized()

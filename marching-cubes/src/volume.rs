@@ -1,6 +1,6 @@
 use gdnative::{prelude::*, api::{MeshInstance, ArrayMesh, Material, Mesh}};
 use rayon::prelude::*;
-use std::{collections::HashMap, mem, time::Instant};
+use std::{collections::HashMap, mem::{self, transmute_copy, size_of}, time::Instant, path::Path, fs::File, io::{Write, Read}};
 
 use crate::chunk::*;
 use crate::mesh;
@@ -8,6 +8,7 @@ use crate::mesh;
 const DEBUG_MESH_TIMES: bool = false;
 const DEBUG_SMOOTH_TIMES: bool = false;
 
+const FILE_HEADER: &[u8] = "voxel volume data".as_bytes();
 
 pub type ChunkLoc = (i16, i16, i16);
 
@@ -132,7 +133,66 @@ impl Volume {
 	fn create_chunk(&mut self, loc: ChunkLoc) {
 		self.chunks.insert(loc, Chunk::new());
 	}
+
+	pub fn save(&self, path: &Path, index: usize) {
+		let filename = format!("{}.bin", index);
+		let mut file = File::create(path.join(filename)).unwrap();
+
+		file.write_all(FILE_HEADER).unwrap();
+
+		let transform = unsafe { self.node.assume_safe() }.transform();
+		let transform_bytes: [u8; size_of::<Transform>()] = unsafe { transmute_copy(&transform) };
+		file.write_all(&transform_bytes).unwrap();
+
+		for (loc, chunk) in &self.chunks {
+			let loc_bytes: [u8; size_of::<ChunkLoc>()] = loc.as_bytes();
+			file.write_all(&loc_bytes).unwrap();
+			file.write_all(&(*chunk.voxels)).unwrap();
+		}
+	}
+
+	pub fn load(path: &Path, index: usize) -> Self {
+		let filename = format!("{}.bin", index);
+		let mut file = File::open(path.join(filename)).unwrap();
+
+		let mut header = [0; FILE_HEADER.len()];
+		file.read_exact(&mut header).unwrap();
+
+		if header != FILE_HEADER {
+			godot_print!("File header mismatch in volume {}", index);
+			return Self::new();
+		}
+
+		let mut new_volume = Self::new();
+
+		let mut transform_bytes = [0; size_of::<Transform>()];
+		file.read_exact(&mut transform_bytes).unwrap();
+		let transform: Transform = unsafe { transmute_copy(&transform_bytes) };
+		unsafe {
+			new_volume.node.assume_safe().set_transform(transform);
+		}
+
+		let mut voxel_data = [0; VOLUME];
+		let mut chunks = 0;
+		loop {
+			let mut loc_bytes = [0; size_of::<ChunkLoc>()];
+			if file.read_exact(&mut loc_bytes).is_err() {
+				break;
+			}
+			let loc = ChunkLoc::from_bytes(loc_bytes);
+
+			file.read_exact(&mut voxel_data).unwrap();
+			let chunk = Chunk { voxels: Box::new(voxel_data) };
+			new_volume.chunks.insert(loc, chunk);
+			new_volume.modified.push(loc);
+			chunks += 1;
+		}
+		godot_print!("added {} chunks", chunks);
+		new_volume.mesh_modified();
+		new_volume
+	}
 }
+
 
 fn locs_in_sphere(pos: Vector3, radius: f32) -> Vec<ChunkLoc> {
 	let center = ChunkLoc::from_wpos(pos);
@@ -150,10 +210,13 @@ fn locs_in_sphere(pos: Vector3, radius: f32) -> Vec<ChunkLoc> {
 	out
 }
 
+
 pub trait ChunkLocT {
 	fn from_wpos(wpos: Vector3) -> Self;
 	fn as_wpos(&self) -> Vector3;
 	fn add(&self, other: Self) -> Self;
+	fn as_bytes(&self) -> [u8; 6];
+	fn from_bytes(bytes: [u8; 6]) -> Self;
 }
 
 impl ChunkLocT for ChunkLoc {
@@ -162,7 +225,7 @@ impl ChunkLocT for ChunkLoc {
 		let p = (wpos / WIDTH_F).floor();
 		(p.x as i16, p.y as i16, p.z as i16)
 	}
-
+	
 	fn as_wpos(&self) -> Vector3 {
 		Vector3::new(
 			self.0 as f32 * WIDTH_F,
@@ -170,9 +233,27 @@ impl ChunkLocT for ChunkLoc {
 			self.2 as f32 * WIDTH_F
 		)
 	}
-
+	
 	#[inline]
 	fn add(&self, other: Self) -> Self {
 		(self.0 + other.0, self.1 + other.1, self.2 + other.2)
+	}
+
+	fn as_bytes(&self) -> [u8; 6] {
+		let x = self.0.to_le_bytes();
+		let y = self.1.to_le_bytes();
+		let z = self.2.to_le_bytes();
+		[x[0], x[1], y[0], y[1], z[0], z[1]]
+	}
+
+	fn from_bytes(bytes: [u8; 6]) -> Self {
+		let x: [u8; 2] = [bytes[0], bytes[1]];
+		let y: [u8; 2] = [bytes[2], bytes[3]];
+		let z: [u8; 2] = [bytes[4], bytes[5]];
+		(
+			i16::from_le_bytes(x),
+			i16::from_le_bytes(y),
+			i16::from_le_bytes(z),
+		)
 	}
 }

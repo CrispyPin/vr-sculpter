@@ -27,7 +27,7 @@ pub struct ChunkBox3<'a> {
 
 
 pub struct Chunk {
-	voxels: Box<[Voxel; VOLUME]>,
+	pub voxels: Box<[Voxel; VOLUME]>,
 }
 
 
