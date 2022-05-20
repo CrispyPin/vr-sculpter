@@ -12,6 +12,8 @@ const SAVE_FILE: &str = "object.meta";
 pub struct VoxelObject {
 	volumes: Vec<Volume>,
 	active: usize,
+	#[property]
+	name: String,
 }
 
 #[methods]
@@ -20,7 +22,13 @@ impl VoxelObject {
 		Self {
 			volumes: Vec::new(),
 			active: 0,
+			name: "untitled1".into(),
 		}
+	}
+
+	#[export]
+	fn set_name(&mut self, _owner: &Spatial, new: String) {
+		self.name = new;
 	}
 
 	#[export]
@@ -48,8 +56,7 @@ impl VoxelObject {
 
 	#[export]
 	fn save(&self, _owner: &Spatial) {
-		let name = "untitled1";
-		let path = get_path(name);
+		let path = get_path(&self.name);
 		if !path.exists() {
 			fs::create_dir_all(&path).unwrap();
 		}
@@ -76,13 +83,12 @@ impl VoxelObject {
 
 	#[export]
 	fn load(&mut self, owner: &Spatial) {
-		self.clear();
-		let name = "untitled1";
-		let path = get_path(name);
+		let path = get_path(&self.name);
 		if !path.join(SAVE_FILE).exists() {
-			godot_print!("No save file exists for '{}'", &name);
+			godot_print!("No save file exists for '{}'", &self.name);
 			return;
 		}
+		self.clear();
 		let mut indexfile = File::open(path.join(SAVE_FILE)).unwrap();
 
 		let mut data = Vec::new();

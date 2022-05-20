@@ -56,3 +56,4 @@ func _physics_process(delta):
 	var vel = dir.normalized() * speed_current
 
 	translate(vel*delta)
+
