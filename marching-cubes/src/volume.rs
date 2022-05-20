@@ -147,20 +147,26 @@ impl Volume {
 		for (loc, chunk) in &self.chunks {
 			let loc_bytes: [u8; size_of::<ChunkLoc>()] = loc.as_bytes();
 			file.write_all(&loc_bytes).unwrap();
-			file.write_all(&(*chunk.voxels)).unwrap();
+			file.write_all(chunk.voxels.as_slice()).unwrap();
 		}
 	}
 
-	pub fn load(path: &Path, index: usize) -> Self {
+	pub fn load(path: &Path, index: usize) -> Option<Self> {
 		let filename = format!("{}.bin", index);
-		let mut file = File::open(path.join(filename)).unwrap();
+		let mut file = match File::open(path.join(filename)) {
+			Ok(f) => f,
+			Err(e) => {
+				godot_print!("Error loading volume {}: {}", index, e);
+				return None;
+			},
+		};
 
 		let mut header = [0; FILE_HEADER.len()];
 		file.read_exact(&mut header).unwrap();
 
 		if header != FILE_HEADER {
 			godot_print!("File header mismatch in volume {}", index);
-			return Self::new();
+			return None;
 		}
 
 		let mut new_volume = Self::new();
@@ -189,7 +195,7 @@ impl Volume {
 		}
 		godot_print!("added {} chunks", chunks);
 		new_volume.mesh_modified();
-		new_volume
+		Some(new_volume)
 	}
 }
 

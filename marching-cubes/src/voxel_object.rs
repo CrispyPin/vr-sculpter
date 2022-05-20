@@ -64,7 +64,7 @@ impl VoxelObject {
 			Ok(file) => file,
 		};
 
-		let save_data = format!("version: {};{}", SAVE_DATA_VERSION, self.volumes.len());
+		let save_data = format!("version: {};{};", SAVE_DATA_VERSION, self.volumes.len());
 		indexfile.write_all(save_data.as_bytes()).unwrap();
 		indexfile.flush().unwrap();
 
@@ -85,27 +85,31 @@ impl VoxelObject {
 		}
 		let mut indexfile = File::open(path.join(SAVE_FILE)).unwrap();
 
-		let mut data = [0; 16];
-		indexfile.read(&mut data).unwrap();
+		let mut data = Vec::new();
+		indexfile.read_to_end(&mut data).unwrap();
 		// parse metadata
 		let data = String::from_utf8_lossy(&data);
-		let (_version_str, volume_count_str) = data.split_once(";").unwrap();
-		godot_print!("count '{}'", &volume_count_str[0..1]);
-		let volume_count: usize = (&volume_count_str[0..1]).parse().unwrap();
+		let (_version_str, volume_count_str) = data.split_once(';').unwrap();
+		let volume_count_str = volume_count_str.split_once(';').unwrap().0;
+		let volume_count: usize = volume_count_str.parse().unwrap();
+		godot_print!("volumes: {}", volume_count);
 
 		// load volumes
 		for i in 0..volume_count {
-			let new_volume = Volume::load(&path, i);
-			owner.add_child(new_volume.node(), true);
-			self.volumes.push(new_volume);
+			if let Some(new_volume) = Volume::load(&path, i) {
+				self.add_volume(owner, new_volume);
+			}
 		}
 	}
 
 	#[export]
 	fn create_volume(&mut self, owner: &Spatial) {
-		let new_volume = Volume::new();
-		owner.add_child(new_volume.node(), true);
-		self.volumes.push(new_volume);
+		self.add_volume(owner, Volume::new());
+	}
+	
+	fn add_volume(&mut self, owner: &Spatial, volume: Volume) {
+		owner.add_child(volume.node(), true);
+		self.volumes.push(volume);
 	}
 
 	#[export]
