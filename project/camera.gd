@@ -5,11 +5,11 @@ export var speed_mod = 5.0
 export var sensitivity_h = 1.0
 export var sensitivity_v = 1.0
 
-var paused := false
+var paused := true
 var speed_current: float
 
 func _ready():
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+#	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	pass
 
 func _input(event):
@@ -25,16 +25,8 @@ func _physics_process(delta):
 	if Input.is_key_pressed(KEY_SHIFT):
 		speed_current *= speed_mod
 
-	if Input.is_key_pressed(KEY_T):
-		translation = Vector3(2, 5, 2)
-		rotation_degrees = Vector3(-90, -90, 0)
-
 	if Input.is_action_just_pressed("esc"):
-		paused = !paused
-		if paused:
-			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-		else:
-			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		toggle_pause()
 
 	if paused:
 		return
@@ -57,3 +49,9 @@ func _physics_process(delta):
 
 	translate(vel*delta)
 
+func toggle_pause():
+	paused = !paused
+	if paused:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	else:
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)

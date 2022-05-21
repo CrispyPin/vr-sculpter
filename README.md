@@ -7,9 +7,11 @@
 - [X] multithreaded smoothing operations
 - [X] saving/loading
 - [X] exporting as mesh
+- [ ] VR support
+  - [X] VR viewing
+  - [ ] Controls
 - [ ] smoothing with bigger radius
 - [ ] name
-- [ ] VR support
 
 
 ## structure: 

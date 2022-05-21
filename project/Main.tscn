@@ -1,42 +1,17 @@
-[gd_scene load_steps=11 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://addons/voxel/VoxelObject.tscn" type="PackedScene" id=1]
 [ext_resource path="res://FreeCam.tscn" type="PackedScene" id=2]
+[ext_resource path="res://vr_init.gd" type="Script" id=3]
 [ext_resource path="res://debugtext.gd" type="Script" id=4]
-[ext_resource path="res://wire_box.tres" type="ArrayMesh" id=5]
 
-[sub_resource type="SphereMesh" id=2]
-radius = 0.1
-height = 0.2
-
-[sub_resource type="SpatialMaterial" id=3]
-flags_transparent = true
-flags_unshaded = true
-flags_no_depth_test = true
-albedo_color = Color( 1, 1, 1, 0.501961 )
-
-[sub_resource type="SpatialMaterial" id=4]
-flags_transparent = true
-flags_unshaded = true
-flags_no_depth_test = true
-albedo_color = Color( 1, 0, 0, 0.501961 )
-
-[sub_resource type="SpatialMaterial" id=6]
-flags_transparent = true
-flags_unshaded = true
-flags_no_depth_test = true
-albedo_color = Color( 0, 1, 0, 0.501961 )
-
-[sub_resource type="SpatialMaterial" id=5]
-flags_transparent = true
-flags_unshaded = true
-flags_no_depth_test = true
-albedo_color = Color( 0, 0, 1, 0.501961 )
+[sub_resource type="CubeMesh" id=7]
 
 [sub_resource type="StyleBoxFlat" id=1]
 bg_color = Color( 0, 0, 0, 0.490196 )
 
 [node name="Main" type="Node"]
+script = ExtResource( 3 )
 
 [node name="VoxelObject" parent="." instance=ExtResource( 1 )]
 
@@ -48,36 +23,13 @@ directional_shadow_mode = 1
 directional_shadow_normal_bias = 0.7
 directional_shadow_max_distance = 256.0
 
-[node name="HighlightBox" type="MeshInstance" parent="."]
-transform = Transform( 32, 0, 0, 0, 32, 0, 0, 0, 32, 0, 0, 0 )
-visible = false
-mesh = ExtResource( 5 )
-material/0 = null
-
-[node name="Axis" type="Spatial" parent="HighlightBox"]
-
-[node name="origin" type="MeshInstance" parent="HighlightBox/Axis"]
-mesh = SubResource( 2 )
-material/0 = SubResource( 3 )
-
-[node name="X" type="MeshInstance" parent="HighlightBox/Axis"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0 )
-mesh = SubResource( 2 )
-material/0 = SubResource( 4 )
-
-[node name="Y" type="MeshInstance" parent="HighlightBox/Axis"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0 )
-mesh = SubResource( 2 )
-material/0 = SubResource( 6 )
-
-[node name="Z" type="MeshInstance" parent="HighlightBox/Axis"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1 )
-mesh = SubResource( 2 )
-material/0 = SubResource( 5 )
-
 [node name="Camera" parent="." instance=ExtResource( 2 )]
 transform = Transform( 0.707107, 0.40558, -0.579228, 0, 0.819152, 0.573577, 0.707107, -0.40558, 0.579228, 0, 32, 32 )
 far = 8192.0
+
+[node name="MeshInstance" type="MeshInstance" parent="Camera"]
+mesh = SubResource( 7 )
+material/0 = null
 
 [node name="DebugUI" type="PanelContainer" parent="."]
 margin_right = 14.0
@@ -136,8 +88,49 @@ margin_right = 164.0
 margin_bottom = 20.0
 text = "export"
 
+[node name="ARVROrigin" type="ARVROrigin" parent="."]
+world_scale = 100.0
+
+[node name="ARVRCamera" type="ARVRCamera" parent="ARVROrigin"]
+
+[node name="ARVRController" type="ARVRController" parent="ARVROrigin"]
+
+[node name="ARVRController2" type="ARVRController" parent="ARVROrigin"]
+controller_id = 2
+
+[node name="StartupMenu" type="PanelContainer" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -87.5
+margin_top = -17.0
+margin_right = 87.5
+margin_bottom = 17.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="StartupMenu"]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 168.0
+margin_bottom = 27.0
+alignment = 1
+
+[node name="VR" type="Button" parent="StartupMenu/HBoxContainer"]
+margin_left = 6.0
+margin_right = 67.0
+margin_bottom = 20.0
+text = "Start VR"
+
+[node name="Debug" type="Button" parent="StartupMenu/HBoxContainer"]
+margin_left = 71.0
+margin_right = 155.0
+margin_bottom = 20.0
+text = "Start debug"
+
 [connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button" to="Camera/Interaction" method="_on_save_pressed"]
 [connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button2" to="Camera/Interaction" method="_on_load_pressed"]
 [connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button3" to="Camera/Interaction" method="_on_export_pressed"]
+[connection signal="pressed" from="StartupMenu/HBoxContainer/VR" to="." method="_on_VR_pressed"]
+[connection signal="pressed" from="StartupMenu/HBoxContainer/Debug" to="." method="_on_Debug_pressed"]
 
 [editable path="Camera"]
