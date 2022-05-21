@@ -7,6 +7,8 @@ use crate::chunk::*;
 const SAVE_DATA_VERSION: u16 = 1;
 const SAVE_FILE: &str = "object.meta";
 
+const EXPORT_HEADER: &[u8] = b"# exported from <name here>\n";
+
 #[derive(NativeClass)]
 #[inherit(Spatial)]
 pub struct VoxelObject {
@@ -14,15 +16,21 @@ pub struct VoxelObject {
 	active: usize,
 	#[property]
 	name: String,
+	export_path: PathBuf,
+	saves_path: PathBuf,
 }
 
 #[methods]
 impl VoxelObject {
 	fn new(_owner: &Spatial) -> Self {
+		let data_dir = PathBuf::from(OS::godot_singleton().get_user_data_dir().to_string());
+
 		Self {
 			volumes: Vec::new(),
 			active: 0,
 			name: "untitled1".into(),
+			export_path: data_dir.join("export"),
+			saves_path: data_dir.join("saves"),
 		}
 	}
 
@@ -56,7 +64,7 @@ impl VoxelObject {
 
 	#[export]
 	fn save(&self, _owner: &Spatial) {
-		let path = get_path(&self.name);
+		let path = self.saves_path.join(&self.name);
 		if !path.exists() {
 			fs::create_dir_all(&path).unwrap();
 		}
@@ -83,7 +91,7 @@ impl VoxelObject {
 
 	#[export]
 	fn load(&mut self, owner: &Spatial) {
-		let path = get_path(&self.name);
+		let path = self.saves_path.join(&self.name);
 		if !path.join(SAVE_FILE).exists() {
 			godot_print!("No save file exists for '{}'", &self.name);
 			return;
@@ -105,6 +113,23 @@ impl VoxelObject {
 			if let Some(new_volume) = Volume::load(&path, i) {
 				self.add_volume(owner, new_volume);
 			}
+		}
+	}
+
+	#[export]
+	fn export(&self, _owner: &Spatial) {
+		let path = &self.export_path;
+		if !path.exists() {
+			fs::create_dir_all(&path).unwrap();
+		}
+		godot_print!("exporting to {}", path.display());
+
+		let filename = format!("{}.obj", &self.name);
+		let mut file = File::create(path.join(filename)).unwrap();
+		file.write_all(EXPORT_HEADER).unwrap();
+
+		for (index, volume) in self.volumes.iter().enumerate()	{
+			volume.export(&mut file, index)
 		}
 	}
 
@@ -135,14 +160,4 @@ impl VoxelObject {
 		self.volumes.clear();
 		self.active = 0;
 	}
-}
-
-
-fn get_path(name: &str) -> PathBuf {
-	let path_str = format!(
-		"{}/saves/{}",
-		OS::godot_singleton().get_user_data_dir(),
-		name
-	);
-	PathBuf::from(path_str)
 }

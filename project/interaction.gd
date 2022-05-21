@@ -49,3 +49,7 @@ func _on_load_pressed():
 func _on_save_pressed():
 	world.set_name(name_field.text)
 	world.save()
+
+
+func _on_export_pressed():
+	world.export()

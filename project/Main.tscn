@@ -119,18 +119,25 @@ margin_bottom = 66.0
 alignment = 1
 
 [node name="Button" type="Button" parent="DebugUI/VBoxContainer/HBoxContainer2"]
-margin_left = 52.0
-margin_right = 93.0
+margin_left = 23.0
+margin_right = 64.0
 margin_bottom = 20.0
 text = "save"
 
 [node name="Button2" type="Button" parent="DebugUI/VBoxContainer/HBoxContainer2"]
-margin_left = 97.0
-margin_right = 136.0
+margin_left = 68.0
+margin_right = 107.0
 margin_bottom = 20.0
 text = "load"
 
+[node name="Button3" type="Button" parent="DebugUI/VBoxContainer/HBoxContainer2"]
+margin_left = 111.0
+margin_right = 164.0
+margin_bottom = 20.0
+text = "export"
+
 [connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button" to="Camera/Interaction" method="_on_save_pressed"]
 [connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button2" to="Camera/Interaction" method="_on_load_pressed"]
+[connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button3" to="Camera/Interaction" method="_on_export_pressed"]
 
 [editable path="Camera"]

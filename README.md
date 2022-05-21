@@ -6,10 +6,10 @@
 - [X] multithreaded mesh generation
 - [X] multithreaded smoothing operations
 - [X] saving/loading
+- [X] exporting as mesh
 - [ ] smoothing with bigger radius
 - [ ] name
 - [ ] VR support
-- [ ] exporting mesh
 
 
 ## structure: 
