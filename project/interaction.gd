@@ -23,6 +23,9 @@ func _process(_delta):
 	if Input.is_action_just_pressed("f2"):
 		world.load()
 
+	if Input.is_action_just_pressed("f3"):
+		world.export()
+
 	if player.paused:
 		return
 	else:

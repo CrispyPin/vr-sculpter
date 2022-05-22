@@ -18,6 +18,7 @@ func _on_VR_pressed():
 	vr_interface = ARVRServer.find_interface("OpenXR")
 	var inited = vr_interface.initialize()
 	if vr_interface and inited:
-		get_viewport().arvr = true
+		OS.vsync_enabled = false
+		$VRViewport.arvr = true
 
 	$StartupMenu.hide()
