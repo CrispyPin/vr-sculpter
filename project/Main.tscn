@@ -1,14 +1,23 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://addons/voxel/VoxelObject.tscn" type="PackedScene" id=1]
 [ext_resource path="res://FreeCam.tscn" type="PackedScene" id=2]
 [ext_resource path="res://vr_init.gd" type="Script" id=3]
 [ext_resource path="res://debugtext.gd" type="Script" id=4]
+[ext_resource path="res://vr_controls.gd" type="Script" id=5]
 
 [sub_resource type="CubeMesh" id=7]
 
 [sub_resource type="StyleBoxFlat" id=1]
 bg_color = Color( 0, 0, 0, 0.490196 )
+
+[sub_resource type="SphereMesh" id=8]
+radius = 0.05
+height = 0.1
+
+[sub_resource type="SphereMesh" id=9]
+radius = 0.05
+height = 0.1
 
 [node name="Main" type="Node"]
 script = ExtResource( 3 )
@@ -90,13 +99,23 @@ text = "export"
 
 [node name="ARVROrigin" type="ARVROrigin" parent="."]
 world_scale = 100.0
+script = ExtResource( 5 )
+radius = 5.0
 
 [node name="ARVRCamera" type="ARVRCamera" parent="ARVROrigin"]
 
-[node name="ARVRController" type="ARVRController" parent="ARVROrigin"]
+[node name="VRLeft" type="ARVRController" parent="ARVROrigin"]
 
-[node name="ARVRController2" type="ARVRController" parent="ARVROrigin"]
+[node name="MeshInstance" type="MeshInstance" parent="ARVROrigin/VRLeft"]
+mesh = SubResource( 8 )
+material/0 = null
+
+[node name="VRRight" type="ARVRController" parent="ARVROrigin"]
 controller_id = 2
+
+[node name="MeshInstance" type="MeshInstance" parent="ARVROrigin/VRRight"]
+mesh = SubResource( 9 )
+material/0 = null
 
 [node name="StartupMenu" type="PanelContainer" parent="."]
 anchor_left = 0.5
@@ -130,6 +149,10 @@ text = "Start debug"
 [connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button" to="Camera/Interaction" method="_on_save_pressed"]
 [connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button2" to="Camera/Interaction" method="_on_load_pressed"]
 [connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button3" to="Camera/Interaction" method="_on_export_pressed"]
+[connection signal="button_pressed" from="ARVROrigin/VRLeft" to="ARVROrigin" method="_on_VRLeft_button_pressed"]
+[connection signal="button_release" from="ARVROrigin/VRLeft" to="ARVROrigin" method="_on_VRLeft_button_release"]
+[connection signal="button_pressed" from="ARVROrigin/VRRight" to="ARVROrigin" method="_on_VRRight_button_pressed"]
+[connection signal="button_release" from="ARVROrigin/VRRight" to="ARVROrigin" method="_on_VRRight_button_release"]
 [connection signal="pressed" from="StartupMenu/HBoxContainer/VR" to="." method="_on_VR_pressed"]
 [connection signal="pressed" from="StartupMenu/HBoxContainer/Debug" to="." method="_on_Debug_pressed"]
 
