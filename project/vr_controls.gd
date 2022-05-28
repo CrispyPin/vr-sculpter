@@ -15,14 +15,16 @@ func _ready():
 
 
 
-func _process(_delta):
-	if right_pressed:
+func _physics_process(_delta):
+	var right_amount = $VRRight.get_joystick_axis(JOY_VR_ANALOG_TRIGGER)
+	if right_amount > 0.25:
 		var pos = $VRRight.translation
-		var radius = radius_max# * $VRRight.get_
+		var radius = radius_max * right_amount
 		object.set_sphere(pos, radius, 255)
-		object.smooth_sphere(pos, radius+2)
+		object.smooth_sphere(pos, radius + 2)
 
-	if left_pressed:
+	var left_amount = $VRLeft.get_joystick_axis(JOY_VR_ANALOG_TRIGGER)
+	if left_amount > 0.99:
 		var radius = radius_max
 		var pos = $VRLeft.translation
 		object.set_sphere(pos, radius, 0)

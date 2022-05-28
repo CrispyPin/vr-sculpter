@@ -9,7 +9,8 @@
 - [X] exporting as mesh
 - [ ] VR support
   - [X] VR viewing
-  - [ ] Controls
+  - [X] Controls
+  - [ ] menus/meta controls
 - [ ] smoothing with bigger radius
 - [ ] name
 
