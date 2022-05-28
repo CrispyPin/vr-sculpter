@@ -204,20 +204,28 @@ impl Volume {
 }
 
 
-fn locs_in_sphere(pos: Vector3, radius: f32) -> Vec<ChunkLoc> {
-	let center = ChunkLoc::from_wpos(pos);
+fn locs_in_sphere(wpos: Vector3, radius: f32) -> Vec<ChunkLoc> {
+	let center = ChunkLoc::from_wpos(wpos);
 	let chunk_r = (radius / WIDTH_F) as i16 + 1;
-	let mut out = Vec::new();
+	let mut locations = Vec::new();
 
-	for x in (-chunk_r)..(chunk_r+1) {
-		for y in (-chunk_r)..(chunk_r+1) {
-			for z in (-chunk_r)..(chunk_r+1) {
+	for x in (-chunk_r)..(chunk_r + 1) {
+		for y in (-chunk_r)..(chunk_r + 1) {
+			for z in (-chunk_r)..(chunk_r + 1) {
 				let loc = center.add((x, y, z));
-				out.push(loc);
+				let chunk_center = loc.as_wpos() + Vector3::ONE * WIDTH_F * 0.5;
+				let dist = dist_to_chunk(wpos - chunk_center);
+				if dist <= radius {
+					locations.push(loc);
+				}
 			}
 		}
 	}
-	out
+	fn dist_to_chunk(relative_pos: Vector3) -> f32 {
+		let q = relative_pos.abs() - Vector3::ONE * WIDTH_F * 0.5;
+		Vector3::new(q.x.max(0.0), q.y.max(0.0), q.z.max(0.0)).length() + q.y.max(q.z).max(q.x).min(0.0)
+	}
+	locations
 }
 
 

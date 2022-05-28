@@ -46,7 +46,7 @@ impl VoxelObject {
 	}
 	
 	#[export]
-	fn _process(&mut self, _owner: &Spatial, _delta: f64) {
+	fn _physics_process(&mut self, _owner: &Spatial, _delta: f64) {
 		if self.volumes.is_empty() {
 			return;
 		}

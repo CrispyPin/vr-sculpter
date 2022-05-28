@@ -1,6 +1,7 @@
 extends Spatial
 
 export var enable_highlight = false
+export var reach = 15
 
 onready var world = $"/root/Main/VoxelObject"
 onready var name_field = $"/root/Main/DebugUI/VBoxContainer/HBoxContainer/LineEdit"
@@ -32,12 +33,12 @@ func _process(_delta):
 		name_field.release_focus()
 
 	if Input.is_action_pressed("place"):
-		world.set_sphere(player.translation + forward() * 20, 5.0, 255)
-		world.smooth_sphere(player.translation + forward() * 20, 6.0)
+		world.set_sphere(player.translation + forward() * reach, 5.0, 255)
+		world.smooth_sphere(player.translation + forward() * reach, 6.0)
 
 	if Input.is_action_pressed("break"):
-		world.set_sphere(player.translation + forward() * 20, 5.0, 0)
-		world.smooth_sphere(player.translation + forward() * 20, 6.0)
+		world.set_sphere(player.translation + forward() * reach, 5.0, 0)
+		world.smooth_sphere(player.translation + forward() * reach, 6.0)
 
 
 func forward() -> Vector3:

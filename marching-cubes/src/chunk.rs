@@ -73,13 +73,8 @@ impl Chunk {
 	}
 
 	#[inline]
-	pub fn get(&self, pos: VPos) -> Voxel {
-		if pos.in_bounds() {
-			self.voxels[pos.index()]
-		}
-		else {
-			0
-		}
+	pub fn get_unchecked(&self, pos: VPos) -> Voxel {
+		self.voxels[pos.index()]
 	}
 }
 
@@ -114,7 +109,7 @@ impl<'a> ChunkBox2<'a> {
 			_ => panic!("ChunkBox2 bounds exceeded")
 		};
 		if let Some(chunk) = self.contents[index] {
-			return chunk.get(local_pos);
+			return chunk.get_unchecked(local_pos);
 		}
 		0
 	}
@@ -189,7 +184,7 @@ impl<'a> ChunkBox3<'a> {
 		};
 		if let Some(chunk) = self.contents[index] {
 			let local_pos = pos.posmod(WIDTH_I8);
-			return chunk.get(local_pos);
+			return chunk.get_unchecked(local_pos);
 		}
 		0
 	}
