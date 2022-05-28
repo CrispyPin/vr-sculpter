@@ -3,22 +3,21 @@ use std::fs::{self, File};
 use std::io::{Write, Read};
 use std::path::PathBuf;
 
+use crate::exporter::*;
 use crate::volume::*;
 use crate::chunk::*;
 
 const SAVE_DATA_VERSION: u16 = 1;
 const SAVE_FILE: &str = "object.meta";
 
-const EXPORT_HEADER: &[u8] = b"# exported from <name here>\n";
-
 #[derive(NativeClass)]
 #[inherit(Spatial)]
 pub struct VoxelObject {
-	volumes: Vec<Volume>,
+	pub volumes: Vec<Volume>,
 	active: usize,
 	#[property]
-	name: String,
-	export_path: PathBuf,
+	pub name: String,
+	pub export_path: PathBuf,
 	saves_path: PathBuf,
 }
 
@@ -125,16 +124,7 @@ impl VoxelObject {
 			fs::create_dir_all(&path).unwrap();
 		}
 		godot_print!("exporting to {}", path.display());
-
-		let t = DateTime::now();
-		let timestamp = format!("{:02}-{:02} {:02}.{:02}.{:02}", t.month, t.day, t.hour, t.minute, t.second);
-		let filename = format!("{} {}.obj", &self.name, timestamp);
-		let mut file = File::create(path.join(filename)).unwrap();
-		file.write_all(EXPORT_HEADER).unwrap();
-
-		for (index, volume) in self.volumes.iter().enumerate()	{
-			volume.export(&mut file, index)
-		}
+		self.export_obj(path);
 	}
 
 	#[export]
@@ -163,31 +153,5 @@ impl VoxelObject {
 		}
 		self.volumes.clear();
 		self.active = 0;
-	}
-}
-
-
-pub struct DateTime {
-	pub year: u16,
-	pub month: u8,
-	pub day: u8,
-	pub hour: u8,
-	pub minute: u8,
-	pub second: u8,
-}
-
-
-impl DateTime {
-	/// wrapper for  Godot's OS.get_datetime()
-	pub fn now() -> Self {
-		let d = OS::godot_singleton().get_datetime(false);
-		Self {
-			year: d.get("year").unwrap().to().unwrap(),
-			month: d.get("month").unwrap().to().unwrap(),
-			day: d.get("day").unwrap().to().unwrap(),
-			hour: d.get("hour").unwrap().to().unwrap(),
-			minute: d.get("minute").unwrap().to().unwrap(),
-			second: d.get("second").unwrap().to().unwrap(),
-		}
 	}
 }

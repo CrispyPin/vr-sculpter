@@ -61,7 +61,11 @@ impl Chunk {
 				new_val += old.get(pos.add((0, -1, 0))) as u16;
 				new_val += old.get(pos.add((0, 0, 1))) as u16;
 				new_val += old.get(pos.add((0, 0, -1))) as u16;
+				let rem = new_val % 7;
 				new_val /= 7;
+				if rem > 3 {
+					new_val += 1;
+				}
 			}
 			new.voxels[i] = new_val as Voxel;
 		}
@@ -76,23 +80,6 @@ impl Chunk {
 		else {
 			0
 		}
-	}
-
-	#[inline]
-	pub fn get_raw(&self, index: usize) -> Voxel{
-		self.voxels[index]
-	}
-
-	#[inline]
-	pub fn set(&mut self, pos: VPos, voxel: Voxel) {
-		if pos.in_bounds() {
-			self.set_unchecked(pos, voxel);
-		}
-	}
-
-	#[inline]
-	fn set_unchecked(&mut self, pos: VPos, voxel: Voxel) {
-		self.voxels[pos.index()] = voxel;
 	}
 }
 

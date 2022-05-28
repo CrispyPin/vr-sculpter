@@ -45,6 +45,10 @@ impl Volume {
 		self.node
 	}
 
+	pub fn get_mesh(&self) -> TRef<ArrayMesh>{
+		unsafe { self.mesh.assume_safe() }
+	}
+
 	pub fn set_sphere(&mut self, pos: Vector3, radius: f32, value: Voxel) {
 		let locs = locs_in_sphere(pos, radius);
 		for loc in locs {
@@ -196,26 +200,6 @@ impl Volume {
 		godot_print!("added {} chunks", chunks);
 		new_volume.mesh_modified();
 		Some(new_volume)
-	}
-
-	pub fn export(&self, file: &mut File, index: usize) {
-		let header = format!("\no Volume{}\ns off", index);
-		file.write_all(header.as_bytes()).unwrap();
-
-		let mesh = unsafe {self.mesh.assume_safe()};
-		let verts = mesh.get_faces();
-		let vert_count = verts.len() as usize;
-		let verts = verts.read();
-		for i in (0..vert_count).step_by(3) {
-			let face = format!(
-				"\nv {} {} {}\nv {} {} {}\nv {} {} {}\nf {} {} {}",
-				verts[i].x, verts[i].y, verts[i].z,
-				verts[i+1].x, verts[i+1].y, verts[i+1].z,
-				verts[i+2].x, verts[i+2].y, verts[i+2].z,
-				i+1, i+2, i+3/* why does OBJ index from 1?? */
-			);
-			file.write_all(&face.into_bytes()).unwrap();
-		}
 	}
 }
 

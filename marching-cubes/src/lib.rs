@@ -4,6 +4,7 @@ mod voxel_object;
 mod volume;
 mod chunk;
 mod mesh;
+mod exporter;
 
 use voxel_object::*;
 

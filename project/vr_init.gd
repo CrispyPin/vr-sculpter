@@ -1,7 +1,7 @@
 extends Node
 
 
-var vr_config := preload("res://addons/godot-openxr/config/OpenXRConfig.gdns").new()
+#var vr_config := preload("res://addons/godot-openxr/config/OpenXRConfig.gdns").new()
 var vr_interface: ARVRInterface
 
 
