@@ -65,21 +65,21 @@ impl Chunk {
 		for i in 0..VOLUME {
 			let pos = VPos::from_index(i);
 			let dist = pos.vector().distance_to(center);
-			let mut new_val = old.get(pos) as u16;
+			let old_val = old.get(pos);
 			if dist <= radius {
+				let mut new_val = old_val as u16;
 				new_val += old.get(pos.add((1, 0, 0))) as u16;
 				new_val += old.get(pos.add((-1, 0, 0))) as u16;
 				new_val += old.get(pos.add((0, 1, 0))) as u16;
 				new_val += old.get(pos.add((0, -1, 0))) as u16;
 				new_val += old.get(pos.add((0, 0, 1))) as u16;
 				new_val += old.get(pos.add((0, 0, -1))) as u16;
-				let rem = new_val % 7;
 				new_val /= 7;
-				if rem > 3 {
-					new_val += 1;
-				}
+				new.voxels[i] = old_val.max(new_val as Voxel);
 			}
-			new.voxels[i] = new_val as Voxel;
+			else {
+				new.voxels[i] = old_val;
+			}
 		}
 		new
 	}
