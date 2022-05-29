@@ -7,7 +7,7 @@ reloadable=true
 
 [entry]
 
-X11.64="res://addons/voxel/bin/linux/libmarching-cubes.so"
+X11.64="res://addons/voxel/bin/linux/libmarching_cubes.so"
 
 [dependencies]
 

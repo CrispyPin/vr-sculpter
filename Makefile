@@ -1,12 +1,17 @@
-default:
-	cd marching-cubes && cargo build
-	ln -sf ../../../../../marching-cubes/target/debug/libmarching_cubes.so project/addons/voxel/bin/linux/libmarching-cubes.so
+ADDON_CRATE=marching-cubes
+ADDON=voxel
+ADDON_LIB=libmarching_cubes.so
+
+default: debug
+debug:
+	cd $(ADDON_CRATE) && cargo build
+	ln -sf ../../../../../$(ADDON_CRATE)/target/debug/$(ADDON_LIB) project/addons/$(ADDON)/bin/linux/$(ADDON_LIB)
 
 r: release
 release:
-	cd marching-cubes && cargo build --release
-	ln -sf ../../../../../marching-cubes/target/release/libmarching_cubes.so project/addons/voxel/bin/linux/libmarching-cubes.so
+	cd $(ADDON_CRATE) && cargo build --release
+	ln -sf ../../../../../$(ADDON_CRATE)/target/release/$(ADDON_LIB) project/addons/$(ADDON)/bin/linux/$(ADDON_LIB)
 
 c: clippy
 clippy:
-	cd marching-cubes && cargo clippy
+	cd $(ADDON_CRATE) && cargo clippy
