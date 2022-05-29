@@ -215,7 +215,7 @@ fn locs_in_sphere(wpos: Vector3, radius: f32) -> Vec<ChunkLoc> {
 				let loc = center.add((x, y, z));
 				let chunk_center = loc.as_wpos() + Vector3::ONE * WIDTH_F * 0.5;
 				let dist = dist_to_chunk(wpos - chunk_center);
-				if dist <= radius {
+				if dist <= (radius + 1.0) {
 					locations.push(loc);
 				}
 			}

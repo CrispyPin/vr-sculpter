@@ -42,8 +42,20 @@ impl Chunk {
 		for i in 0..VOLUME {
 			let pos = VPos::from_index(i).vector();
 			let dist = pos.distance_to(center);
-			if dist <= radius {
+			let surface_dist = dist - radius;
+			if surface_dist < 0.0 {
 				self.voxels[i] = value;
+			}
+			else if surface_dist < 1.0 {
+				let old = self.voxels[i];
+				if old < value {
+					let interpolated_value = lerp(old, value, 1.0 - surface_dist);
+					self.voxels[i] = interpolated_value;
+				}
+				else {
+					let interpolated_value = lerp(value, old, surface_dist);
+					self.voxels[i] = interpolated_value;
+				}
 			}
 		}
 	}
@@ -78,6 +90,11 @@ impl Chunk {
 	}
 }
 
+#[inline]
+fn lerp(a: u8, b: u8, t: f32) -> u8 {
+	a + (t * (b - a) as f32) as u8
+}
+  
 
 impl<'a> ChunkBox2<'a> {
 	pub fn new(chunks: &'a HashMap<ChunkLoc, Chunk>, loc: ChunkLoc) -> Self {
