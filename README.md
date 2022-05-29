@@ -1,4 +1,6 @@
-# marching-cubes
+# vr-sculpter
+
+A WIP VR sculpting app.
 
 ## Todo:
 - [X] marching cubes meshing
@@ -6,32 +8,11 @@
 - [X] multithreaded mesh generation
 - [X] multithreaded smoothing operations
 - [X] saving/loading
-- [X] exporting as mesh
+- [X] exporting to OBJ
 - [ ] VR support
   - [X] VR viewing
   - [X] Controls
   - [ ] menus/meta controls
 - [ ] smoothing with bigger radius
-- [ ] name
+- [ ] better name
 
-
-## structure: 
-```
-VoxelObject {
-	volumes: Vec<Volume>
-}
-
-Volume {
-	chunks: HashMap<Chunk>,
-	surface_indexes: HashMap<usize>,
-	node: Ref<MeshInstance>,
-	mesh: Ref<ArrayMesh>,
-	surface_level: u8,
-	material: Ref<Material>,
-}
-
-Chunk {
-	voxels: Box<[u8; 32^3]>
-}
-
-```
