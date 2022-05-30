@@ -3,9 +3,9 @@ use std::fs::{self, File};
 use std::io::{Write, Read};
 use std::path::PathBuf;
 
-use crate::exporter::*;
-use crate::volume::*;
-use crate::chunk::*;
+use super::exporter::*;
+use super::volume::*;
+use super::chunk::*;
 
 const SAVE_DATA_VERSION: u16 = 1;
 const SAVE_FILE: &str = "object.meta";

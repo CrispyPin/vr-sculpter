@@ -1,6 +1,6 @@
 use gdnative::{prelude::*, api::Mesh};
 
-use crate::chunk::*;
+use super::chunk::*;
 
 const CORNERS: [VPos; 8] = [
 	(0, 1, 1),

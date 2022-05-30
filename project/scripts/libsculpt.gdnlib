@@ -7,8 +7,10 @@ reloadable=true
 
 [entry]
 
-X11.64="res://addons/voxel/bin/linux/libmarching_cubes.so"
+Windows.64="res://bin/windows/vrsculpt.dll"
+X11.64="res://bin/linux/libvrsculpt.so"
 
 [dependencies]
 
+Windows.64=[  ]
 X11.64=[  ]

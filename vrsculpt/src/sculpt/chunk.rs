@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use gdnative::prelude::*;
 
-use crate::volume::ChunkLoc;
-use crate::volume::ChunkLocT;
+use super::volume::ChunkLoc;
+use super::volume::ChunkLocT;
 
 pub const WIDTH: usize = 32;
 pub const WIDTH_F: f32 = WIDTH as f32;

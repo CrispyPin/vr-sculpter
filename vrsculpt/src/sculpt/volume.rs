@@ -2,8 +2,8 @@ use gdnative::{prelude::*, api::{MeshInstance, ArrayMesh, Material, Mesh}};
 use rayon::prelude::*;
 use std::{collections::HashMap, mem::{self, transmute_copy, size_of}, time::Instant, path::Path, fs::File, io::{Write, Read}};
 
-use crate::chunk::*;
-use crate::mesh;
+use super::chunk::*;
+use super::mesh;
 
 const DEBUG_MESH_TIMES: bool = false;
 const DEBUG_SMOOTH_TIMES: bool = false;

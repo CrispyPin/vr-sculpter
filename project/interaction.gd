@@ -33,12 +33,12 @@ func _process(_delta):
 		name_field.release_focus()
 
 	if Input.is_action_pressed("place"):
-		world.set_sphere(player.translation + forward() * reach, 5.0, 255)
+		world.set_sphere(player.translation + forward() * reach, 5.0, 205)
 		# world.smooth_sphere(player.translation + forward() * reach, 6.0)
 
 	if Input.is_action_pressed("break"):
-		world.set_sphere(player.translation + forward() * reach, 5.0, 0)
-		# world.smooth_sphere(player.translation + forward() * reach, 6.0)
+#		world.set_sphere(player.translation + forward() * reach, 5.0, 0)
+		world.smooth_sphere(player.translation + forward() * reach, 18.0)
 
 
 func forward() -> Vector3:

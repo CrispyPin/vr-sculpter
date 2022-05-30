@@ -1,6 +1,7 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://addons/voxel/voxel_object.gdns" type="Script" id=1]
+[ext_resource path="res://scripts/voxel_object.gdns" type="Script" id=1]
 
 [node name="VoxelObject" type="Spatial"]
 script = ExtResource( 1 )
+name = "untitled1"

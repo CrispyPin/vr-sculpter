@@ -1,10 +1,10 @@
 use std::{path::Path, fs::File, io::Write};
 use gdnative::api::OS;
 
-use crate::volume::*;
-use crate::voxel_object::*;
+use super::volume::*;
+use super::voxel_object::*;
 
-const EXPORT_HEADER: &[u8] = b"# exported from <name here>\n";
+const EXPORT_HEADER: &[u8] = b"# exported from vr-sculpter\n";
 
 
 pub trait ExportOBJ {

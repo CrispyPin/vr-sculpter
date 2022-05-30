@@ -1,15 +1,14 @@
 use gdnative::prelude::*;
 
-mod voxel_object;
-mod volume;
-mod chunk;
-mod mesh;
-mod exporter;
+mod sculpt;
+use sculpt::voxel_object::VoxelObject;
+mod controls;
+use controls::*;
 
-use voxel_object::*;
 
 fn init(handle: InitHandle) {
 	handle.add_class::<VoxelObject>();
+	handle.add_class::<VRControls>();
 }
 
 godot_init!(init);
