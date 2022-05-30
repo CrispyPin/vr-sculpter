@@ -36,17 +36,17 @@ impl VoxelObject {
 	}
 
 	#[export]
-	fn set_name(&mut self, _owner: &Spatial, new: String) {
+	pub fn set_name(&mut self, _owner: &Spatial, new: String) {
 		self.name = new;
 	}
 
 	#[export]
-	fn _ready(&mut self, owner: &Spatial) {
+	pub fn _ready(&mut self, owner: &Spatial) {
 		self.create_volume(owner);
 	}
 	
 	#[export]
-	fn _physics_process(&mut self, _owner: &Spatial, _delta: f64) {
+	pub fn _physics_process(&mut self, _owner: &Spatial, _delta: f64) {
 		if self.volumes.is_empty() {
 			return;
 		}
@@ -54,17 +54,17 @@ impl VoxelObject {
 	}
 
 	#[export]
-	fn set_sphere(&mut self, _owner: &Spatial, pos: Vector3, radius: f32, value: Voxel) {
+	pub fn set_sphere(&mut self, _owner: TRef<Spatial>, pos: Vector3, radius: f32, value: Voxel) {
 		self.volumes[self.active].set_sphere(pos, radius, value);
 	}
 
 	#[export]
-	fn smooth_sphere(&mut self, _owner: &Spatial, pos: Vector3, radius: f32) {
+	pub fn smooth_sphere(&mut self, _owner: TRef<Spatial>, pos: Vector3, radius: f32) {
 		self.volumes[self.active].smooth(pos, radius);
 	}
 
 	#[export]
-	fn save(&self, _owner: &Spatial) {
+	pub fn save(&self, _owner: &Spatial) {
 		let path = self.saves_path.join(&self.name);
 		if !path.exists() {
 			fs::create_dir_all(&path).unwrap();
@@ -91,7 +91,7 @@ impl VoxelObject {
 	}
 
 	#[export]
-	fn load(&mut self, owner: &Spatial) {
+	pub fn load(&mut self, owner: &Spatial) {
 		let path = self.saves_path.join(&self.name);
 		if !path.join(SAVE_FILE).exists() {
 			godot_print!("No save file exists for '{}'", &self.name);
@@ -118,7 +118,7 @@ impl VoxelObject {
 	}
 
 	#[export]
-	fn export(&self, _owner: &Spatial) {
+	pub fn export(&self, _owner: &Spatial) {
 		let path = &self.export_path;
 		if !path.exists() {
 			fs::create_dir_all(&path).unwrap();
@@ -128,26 +128,26 @@ impl VoxelObject {
 	}
 
 	#[export]
-	fn create_volume(&mut self, owner: &Spatial) {
+	pub fn create_volume(&mut self, owner: &Spatial) {
 		self.add_volume(owner, Volume::new());
 	}
 	
-	fn add_volume(&mut self, owner: &Spatial, volume: Volume) {
+	pub fn add_volume(&mut self, owner: &Spatial, volume: Volume) {
 		owner.add_child(volume.node(), true);
 		self.volumes.push(volume);
 	}
 
 	#[export]
-	fn get_active(&self, _owner: &Spatial) -> usize {
+	pub fn get_active(&self, _owner: &Spatial) -> usize {
 		self.active
 	}
 
 	#[export]
-	fn set_active(&mut self, _owner: &Spatial, new_value: usize) {
+	pub fn set_active(&mut self, _owner: &Spatial, new_value: usize) {
 		self.active = new_value.max(self.volumes.len() - 1);
 	}
 
-	fn clear(&mut self) {
+	pub fn clear(&mut self) {
 		for volume in &self.volumes {
 			unsafe{ volume.node().assume_safe().queue_free(); }
 		}

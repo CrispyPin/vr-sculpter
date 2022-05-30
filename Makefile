@@ -1,26 +1,17 @@
-ADDON_CRATE=vrsculpt
-ADDON_LIB=libvrsculpt.so
-
-# MAIN_CRATE=vr-sculpter
-# MAIN_LIB=libvr_sculpter.so
+CRATE=vrsculpt
+LIB_NAME=libvrsculpt.so
 
 default: debug
 debug:
-	cd $(ADDON_CRATE) && cargo build
-	ln -sf ../../../$(ADDON_CRATE)/target/debug/$(ADDON_LIB) project/bin/linux/$(ADDON_LIB)
-#
-#	cd $(MAIN_CRATE) && cargo build
-#	ln -sf ../../../$(MAIN_CRATE)/target/debug/$(MAIN_LIB) project/bin/linux/$(MAIN_LIB)
+	cd $(CRATE) && cargo build
+	ln -sf ../../../$(CRATE)/target/debug/$(LIB_NAME) project/bin/linux/$(LIB_NAME)
 
 r: release
 release:
-	cd $(ADDON_CRATE) && cargo build --release
-	ln -sf ../../../$(ADDON_CRATE)/target/release/$(ADDON_LIB) project/bin/linux/$(ADDON_LIB)
+	cd $(CRATE) && cargo build --release
+	ln -sf ../../../$(CRATE)/target/release/$(LIB_NAME) project/bin/linux/$(LIB_NAME)
 
-#	cd $(MAIN_CRATE) && cargo build --release
-#	ln -sf ../../../$(MAIN_CRATE)/target/release/$(MAIN_LIB) project/bin/linux/$(MAIN_LIB)
-#
 c: clippy
 clippy:
-	cd $(ADDON_CRATE) && cargo clippy
-#	cd $(MAIN_CRATE) && cargo clippy
+	cd $(CRATE) && cargo clippy
+

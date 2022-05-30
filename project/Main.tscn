@@ -156,10 +156,6 @@ text = "Start debug"
 [connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button" to="Camera/Interaction" method="_on_save_pressed"]
 [connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button2" to="Camera/Interaction" method="_on_load_pressed"]
 [connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button3" to="Camera/Interaction" method="_on_export_pressed"]
-[connection signal="button_pressed" from="VRViewport/ARVROrigin/VRLeft" to="VRViewport/ARVROrigin" method="_on_VRLeft_button_pressed"]
-[connection signal="button_release" from="VRViewport/ARVROrigin/VRLeft" to="VRViewport/ARVROrigin" method="_on_VRLeft_button_release"]
-[connection signal="button_pressed" from="VRViewport/ARVROrigin/VRRight" to="VRViewport/ARVROrigin" method="_on_VRRight_button_pressed"]
-[connection signal="button_release" from="VRViewport/ARVROrigin/VRRight" to="VRViewport/ARVROrigin" method="_on_VRRight_button_release"]
 [connection signal="pressed" from="StartupMenu/HBoxContainer/VR" to="." method="_on_VR_pressed"]
 [connection signal="pressed" from="StartupMenu/HBoxContainer/Debug" to="." method="_on_Debug_pressed"]
 
