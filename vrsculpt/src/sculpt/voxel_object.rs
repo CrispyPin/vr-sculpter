@@ -54,12 +54,22 @@ impl VoxelObject {
 	}
 
 	#[export]
+	#[inline]
 	pub fn set_sphere(&mut self, _owner: TRef<Spatial>, pos: Vector3, radius: f32, value: Voxel) {
+		self._set_sphere(pos, radius, value);
+	}
+	
+	pub fn _set_sphere(&mut self, pos: Vector3, radius: f32, value: Voxel) {
 		self.volumes[self.active].set_sphere(pos, radius, value);
 	}
-
+	
 	#[export]
+	#[inline]
 	pub fn smooth_sphere(&mut self, _owner: TRef<Spatial>, pos: Vector3, radius: f32) {
+		self._smooth_sphere(pos, radius);
+	}
+
+	pub fn _smooth_sphere(&mut self, pos: Vector3, radius: f32) {
 		self.volumes[self.active].smooth(pos, radius);
 	}
 

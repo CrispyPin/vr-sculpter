@@ -1,16 +1,21 @@
+use std::cell::RefCell;
+
 use gdnative::{prelude::*, api::{ARVROrigin, ARVRController}};
 use gdnative::api::GlobalConstants;
 
 use crate::sculpt::voxel_object::VoxelObject;
+mod tool;
+use tool::*;
 
 
 #[derive(NativeClass)]
 #[inherit(ARVROrigin)]
 pub struct VRControls {
-	voxel_object: Option<Instance<VoxelObject>>,
+	voxel_object: Option<RefCell<Instance<VoxelObject>>>,
 	hand_r: Option<Ref<ARVRController>>,
 	hand_l: Option<Ref<ARVRController>>,
-	radius: f32,
+	tool_r: ToolHand,
+	tool_l: ToolHand,
 }
 
 #[methods]
@@ -20,7 +25,8 @@ impl VRControls {
 			voxel_object: None,
 			hand_l: None,
 			hand_r: None,
-			radius: 5.0,
+			tool_l: ToolHand::new(),
+			tool_r: ToolHand::new(),
 		}
 	}
 
@@ -35,22 +41,23 @@ impl VRControls {
 			.cast_instance::<VoxelObject>()
 			.unwrap()
 		};
-		self.voxel_object = Some(voxel_object.claim());
+		self.voxel_object = Some(RefCell::new(voxel_object.claim()));
 		
 		self.voxel_object().map_mut(
-			|obj, owner| {
-				obj.set_sphere(owner, Vector3::new(25.0, 50.0, 0.0), 4.0, 255);
+			|obj, _owner| {
+				obj._set_sphere(Vector3::new(25.0, 50.0, 0.0), 4.0, 255);
 			}).unwrap();
 		
 		self.hand_r = Some(unsafe{owner.get_node("VRRight").unwrap().assume_safe().cast::<ARVRController>().unwrap().claim()});
 		self.hand_l = Some(unsafe{owner.get_node("VRLeft").unwrap().assume_safe().cast::<ARVRController>().unwrap().claim()});
 	}
 
-	fn voxel_object(&mut self) -> TInstance<VoxelObject> {
+	fn voxel_object(&self) -> TInstance<VoxelObject> {
 		unsafe {
 			self.voxel_object
-				.as_mut()
+				.as_ref()
 				.unwrap()
+				.borrow_mut()
 				.assume_safe()
 		}
 	}
@@ -74,29 +81,23 @@ impl VRControls {
 	#[export]
 	fn _physics_process(&mut self, _owner: TRef<ARVROrigin>, _delta: f32) {
 		{
-			let trigger_right = self.right_hand().get_joystick_axis(GlobalConstants::JOY_VR_ANALOG_TRIGGER) as f32;
-			let radius = self.radius * trigger_right;
-			if radius > 1.5 {
-				let pos = self.right_hand().translation();
+			let right_hand = self.right_hand();
+			let trigger = right_hand.get_joystick_axis(GlobalConstants::JOY_VR_ANALOG_TRIGGER) as f32;
+			let pos = right_hand.translation();
 	
-				self.voxel_object().map_mut(|voxel_object, owner| {
-					voxel_object.set_sphere(owner, pos, radius, 255);
-					voxel_object.smooth_sphere(owner, pos, radius + 1.0);
-				}).unwrap();
-			}
+			self.voxel_object().map_mut(|voxel_object, _owner| {
+				self.tool_r.apply(voxel_object, trigger, pos);
+			}).unwrap();
 		}
 
 		{
-			let trigger_left = self.left_hand().get_joystick_axis(GlobalConstants::JOY_VR_ANALOG_TRIGGER) as f32;
-			let radius = self.radius * trigger_left;
-			if radius > 1.5 {
-				let pos = self.left_hand().translation();
+			let left_hand = self.left_hand();
+			let trigger = left_hand.get_joystick_axis(GlobalConstants::JOY_VR_ANALOG_TRIGGER) as f32;
+			let pos = left_hand.translation();
 	
-				self.voxel_object().map_mut(|voxel_object, owner| {
-					voxel_object.set_sphere(owner, pos, radius, 0);
-					voxel_object.smooth_sphere(owner, pos, radius + 1.0);
-				}).unwrap();	
-			}
+			self.voxel_object().map_mut(|voxel_object, _owner| {
+				self.tool_l.apply(voxel_object, trigger, pos);
+			}).unwrap();	
 		}
 	}
 }
