@@ -39,6 +39,14 @@ impl ToolHand {
 		}
 	}
 
+	pub fn next(&mut self) {
+		self.active = (self.active + 1) % self.tools.len()
+	}
+
+	pub fn prev(&mut self) {
+		self.active = (self.active + self.tools.len() - 1) % self.tools.len()
+	}
+
 	pub fn apply(&self, target: &mut VoxelObject, trigger: f32, pos: Vector3) {
 		if trigger < self.min_trigger {
 			return;
@@ -55,9 +63,9 @@ impl ToolHand {
 			ToolType::Smooth => {
 				target._smooth_sphere(pos, radius);
 			},
-		}
+		};
 		if tool.smooth {
-			target._smooth_sphere(pos, radius + 1.0);
+			target._smooth_sphere(pos, radius + 2.0);
 		}
 	}
 

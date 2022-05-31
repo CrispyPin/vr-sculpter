@@ -6,7 +6,8 @@ use gdnative::api::GlobalConstants;
 use crate::sculpt::voxel_object::VoxelObject;
 mod tool;
 use tool::*;
-
+mod input;
+use input::*;
 
 #[derive(NativeClass)]
 #[inherit(ARVROrigin)]
@@ -16,6 +17,8 @@ pub struct VRControls {
 	hand_l: Option<Ref<ARVRController>>,
 	tool_r: ToolHand,
 	tool_l: ToolHand,
+	state_r: HandState,
+	state_l: HandState,
 }
 
 #[methods]
@@ -27,6 +30,8 @@ impl VRControls {
 			hand_r: None,
 			tool_l: ToolHand::new(),
 			tool_r: ToolHand::new(),
+			state_l: HandState::new(),
+			state_r: HandState::new(),
 		}
 	}
 
@@ -98,6 +103,24 @@ impl VRControls {
 			self.voxel_object().map_mut(|voxel_object, _owner| {
 				self.tool_l.apply(voxel_object, trigger, pos);
 			}).unwrap();	
+		}
+	}
+	
+	#[export]
+	fn _process(&mut self, _owner: TRef<ARVROrigin>, _delta: f32) {
+		let right_x = self.right_hand().get_joystick_axis(GlobalConstants::JOY_AXIS_0);
+		if right_x.abs() < 0.3{
+			self.state_r.sel_x = false;
+		}
+		if !self.state_r.sel_x {
+			if right_x > 0.8 {
+				self.tool_r.next();
+				self.state_r.sel_x = true;
+			}
+			else if right_x < -0.8 {
+				self.tool_r.prev();
+				self.state_r.sel_x = true;
+			}
 		}
 	}
 }
