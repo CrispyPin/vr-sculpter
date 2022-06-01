@@ -1,10 +1,9 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=9 format=2]
 
-[ext_resource path="res://VoxelObject.tscn" type="PackedScene" id=1]
 [ext_resource path="res://FreeCam.tscn" type="PackedScene" id=2]
 [ext_resource path="res://vr_init.gd" type="Script" id=3]
 [ext_resource path="res://debugtext.gd" type="Script" id=4]
-[ext_resource path="res://scripts/vr_controls.gdns" type="Script" id=5]
+[ext_resource path="res://scripts/vr_sculpt.gdns" type="Script" id=5]
 
 [sub_resource type="CubeMesh" id=7]
 
@@ -22,8 +21,6 @@ height = 0.1
 
 [node name="Main" type="Node"]
 script = ExtResource( 3 )
-
-[node name="VoxelObject" parent="." instance=ExtResource( 1 )]
 
 [node name="Sun" type="DirectionalLight" parent="."]
 transform = Transform( 0.866025, -0.383022, 0.321394, 0, 0.642787, 0.766045, -0.5, -0.663414, 0.556671, 0, 4, 0 )
@@ -104,7 +101,6 @@ render_target_update_mode = 3
 
 [node name="ARVROrigin" type="ARVROrigin" parent="VRViewport"]
 world_scale = 100.0
-script = ExtResource( 5 )
 
 [node name="ARVRCamera" type="ARVRCamera" parent="VRViewport/ARVROrigin"]
 current = true
@@ -152,6 +148,9 @@ margin_left = 71.0
 margin_right = 155.0
 margin_bottom = 20.0
 text = "Start debug"
+
+[node name="VRSculpt" type="Node" parent="."]
+script = ExtResource( 5 )
 
 [connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button" to="Camera/Interaction" method="_on_save_pressed"]
 [connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button2" to="Camera/Interaction" method="_on_load_pressed"]

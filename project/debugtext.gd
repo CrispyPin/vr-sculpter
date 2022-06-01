@@ -1,6 +1,6 @@
 extends Label
 
-onready var world = $"/root/Main/VoxelObject"
+#onready var world = $"/root/Main/VoxelObject"
 onready var player = $"/root/Main/Camera"
 onready var interaction = $"/root/Main/Camera/Interaction"
 

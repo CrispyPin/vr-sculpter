@@ -10,23 +10,25 @@ use super::chunk::*;
 const SAVE_DATA_VERSION: u16 = 1;
 const SAVE_FILE: &str = "object.meta";
 
-#[derive(NativeClass)]
-#[inherit(Spatial)]
+// #[derive(NativeClass)]
+// #[inherit(Spatial)]
 pub struct VoxelObject {
+	node: Ref<Spatial>,
 	pub volumes: Vec<Volume>,
 	active: usize,
-	#[property]
 	pub name: String,
 	pub export_path: PathBuf,
 	saves_path: PathBuf,
 }
 
-#[methods]
+// #[methods]
 impl VoxelObject {
-	fn new(_owner: &Spatial) -> Self {
+	pub fn new() -> Self {
 		let data_dir = PathBuf::from(OS::godot_singleton().get_user_data_dir().to_string());
+		let node = unsafe { Spatial::new().assume_shared() };
 
 		Self {
+			node,
 			volumes: Vec::new(),
 			active: 0,
 			name: "untitled1".into(),
@@ -35,45 +37,24 @@ impl VoxelObject {
 		}
 	}
 
-	#[export]
-	pub fn set_name(&mut self, _owner: &Spatial, new: String) {
-		self.name = new;
+	pub fn node(&self) -> Ref<Spatial> {
+		self.node
 	}
 
-	#[export]
-	pub fn _ready(&mut self, owner: &Spatial) {
-		self.create_volume(owner);
-	}
-	
-	#[export]
-	pub fn _physics_process(&mut self, _owner: &Spatial, _delta: f64) {
-		if self.volumes.is_empty() {
-			return;
+	pub fn update_meshes(&mut self) {
+		for v in self.volumes.iter_mut() {
+			v.mesh_modified();
 		}
-		self.volumes[0].mesh_modified();
-	}
-
-	#[export]
-	#[inline]
-	pub fn set_sphere(&mut self, _owner: TRef<Spatial>, pos: Vector3, radius: f32, value: Voxel) {
-		self._set_sphere(pos, radius, value);
 	}
 	
-	pub fn _set_sphere(&mut self, pos: Vector3, radius: f32, value: Voxel) {
+	pub fn set_sphere(&mut self, pos: Vector3, radius: f32, value: Voxel) {
 		self.volumes[self.active].set_sphere(pos, radius, value);
 	}
 	
-	#[export]
-	#[inline]
-	pub fn smooth_sphere(&mut self, _owner: TRef<Spatial>, pos: Vector3, radius: f32) {
-		self._smooth_sphere(pos, radius);
-	}
-
-	pub fn _smooth_sphere(&mut self, pos: Vector3, radius: f32) {
+	pub fn smooth_sphere(&mut self, pos: Vector3, radius: f32) {
 		self.volumes[self.active].smooth(pos, radius);
 	}
 
-	#[export]
 	pub fn save(&self, _owner: &Spatial) {
 		let path = self.saves_path.join(&self.name);
 		if !path.exists() {
@@ -100,8 +81,7 @@ impl VoxelObject {
 		}
 	}
 
-	#[export]
-	pub fn load(&mut self, owner: &Spatial) {
+	pub fn load(&mut self) {
 		let path = self.saves_path.join(&self.name);
 		if !path.join(SAVE_FILE).exists() {
 			godot_print!("No save file exists for '{}'", &self.name);
@@ -122,12 +102,11 @@ impl VoxelObject {
 		// load volumes
 		for i in 0..volume_count {
 			if let Some(new_volume) = Volume::load(&path, i) {
-				self.add_volume(owner, new_volume);
+				self.add_volume(new_volume);
 			}
 		}
 	}
 
-	#[export]
 	pub fn export(&self, _owner: &Spatial) {
 		let path = &self.export_path;
 		if !path.exists() {
@@ -137,22 +116,21 @@ impl VoxelObject {
 		self.export_obj(path);
 	}
 
-	#[export]
-	pub fn create_volume(&mut self, owner: &Spatial) {
-		self.add_volume(owner, Volume::new());
+	pub fn create_volume(&mut self) {
+		self.add_volume(Volume::new());
 	}
 	
-	pub fn add_volume(&mut self, owner: &Spatial, volume: Volume) {
-		owner.add_child(volume.node(), true);
+	pub fn add_volume(&mut self, volume: Volume) {
+		unsafe {
+			self.node.assume_safe().add_child(volume.node(), true);
+		}
 		self.volumes.push(volume);
 	}
 
-	#[export]
-	pub fn get_active(&self, _owner: &Spatial) -> usize {
+	pub fn active(&self, _owner: &Spatial) -> usize {
 		self.active
 	}
 
-	#[export]
 	pub fn set_active(&mut self, _owner: &Spatial, new_value: usize) {
 		self.active = new_value.max(self.volumes.len() - 1);
 	}
@@ -163,5 +141,6 @@ impl VoxelObject {
 		}
 		self.volumes.clear();
 		self.active = 0;
+		self.create_volume();
 	}
 }

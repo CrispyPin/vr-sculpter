@@ -1,6 +1,5 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://interaction.gd" type="Script" id=1]
 [ext_resource path="res://camera.gd" type="Script" id=2]
 
 [node name="Camera" type="Camera"]
@@ -9,4 +8,3 @@ script = ExtResource( 2 )
 
 [node name="Interaction" type="Spatial" parent="."]
 transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, 0, -1 )
-script = ExtResource( 1 )

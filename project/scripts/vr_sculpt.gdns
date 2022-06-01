@@ -3,5 +3,5 @@
 [ext_resource path="res://scripts/libsculpt.gdnlib" type="GDNativeLibrary" id=1]
 
 [resource]
-class_name = "VRControls"
+class_name = "VRSculpt"
 library = ExtResource( 1 )
