@@ -1,20 +1,29 @@
+use gdnative::api::ARVRController;
 use gdnative::{prelude::*, api::ARVROrigin};
 
-use crate::{controls::VRControls, sculpt::voxel_object::VoxelObject};
+use crate::sculpt::voxel_object::VoxelObject;
+
+use crate::tool::*;
 
 #[derive(NativeClass)]
 #[inherit(Node)]
 pub struct VRSculpt {
-	controls: VRControls,
+	controls: Option<VRControls>,
 	objects: Vec<VoxelObject>,
 	active: Option<usize>,
+}
+
+struct VRControls {
+	arvr_origin: Ref<ARVROrigin>,
+	right: ToolHand,
+	left: ToolHand,
 }
 
 #[methods]
 impl VRSculpt {
 	fn new(_owner: &Node) -> Self {
 		Self {
-			controls: VRControls::new(/* arvr_origin */),
+			controls: None,
 			objects: Vec::new(),
 			active: None,
 		}
@@ -30,18 +39,21 @@ impl VRSculpt {
 			.unwrap()
 			.claim()
 		};
-		self.controls.init(arvr_origin);
+		self.controls = Some(VRControls::new(arvr_origin));
 		self.create_object(owner);
 		self.active = Some(0);
 	}
 	
 	#[export]
-	fn _process(&mut self, _owner: &Node, _delta: f64) {
+	fn _process(&mut self, _owner: &Node) {
 		for obj in self.objects.iter_mut() {
 			obj.update_meshes();
 		}
-		if let Some(active) = self.active {
-			self.controls.update(&mut self.objects[active]);
+		if let Some(controls) = &mut self.controls {
+			if let Some(active) = self.active {
+				controls.right.update(&mut self.objects[active]);
+				controls.left.update(&mut self.objects[active]);
+			}
 		}
 	}
 
@@ -50,5 +62,19 @@ impl VRSculpt {
 		object.create_volume();
 		owner.add_child(object.node(), true);
 		self.objects.push(object);
+	}
+}
+
+
+impl VRControls {
+	pub fn new(arvr_origin: Ref<ARVROrigin>) -> Self {
+		let hand_r = unsafe{arvr_origin.assume_safe().get_node("VRRight").unwrap().assume_safe().cast::<ARVRController>().unwrap().claim()};
+		let hand_l = unsafe{arvr_origin.assume_safe().get_node("VRLeft").unwrap().assume_safe().cast::<ARVRController>().unwrap().claim()};
+		
+		Self {
+			arvr_origin,
+			left: ToolHand::new(hand_l),
+			right: ToolHand::new(hand_r),
+		}
 	}
 }
