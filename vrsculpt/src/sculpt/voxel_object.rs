@@ -55,7 +55,7 @@ impl VoxelObject {
 		self.volumes[self.active].smooth(pos, radius);
 	}
 
-	pub fn save(&self, _owner: &Spatial) {
+	pub fn save(&self) {
 		let path = self.saves_path.join(&self.name);
 		if !path.exists() {
 			fs::create_dir_all(&path).unwrap();
@@ -81,13 +81,15 @@ impl VoxelObject {
 		}
 	}
 
-	pub fn load(&mut self) {
-		let path = self.saves_path.join(&self.name);
+	pub fn load(name: &str) -> Option<Self>{
+		let mut new = Self::new();
+		let path = new.saves_path.join(name);
 		if !path.join(SAVE_FILE).exists() {
-			godot_print!("No save file exists for '{}'", &self.name);
-			return;
+			godot_print!("No save file exists for '{}'", name);
+			return None;
 		}
-		self.clear();
+		new.name = name.to_owned();
+		
 		let mut indexfile = File::open(path.join(SAVE_FILE)).unwrap();
 
 		let mut data = Vec::new();
@@ -102,12 +104,13 @@ impl VoxelObject {
 		// load volumes
 		for i in 0..volume_count {
 			if let Some(new_volume) = Volume::load(&path, i) {
-				self.add_volume(new_volume);
+				new.add_volume(new_volume);
 			}
 		}
+		Some(new)
 	}
 
-	pub fn export(&self, _owner: &Spatial) {
+	pub fn export(&self) {
 		let path = &self.export_path;
 		if !path.exists() {
 			fs::create_dir_all(&path).unwrap();
@@ -141,6 +144,5 @@ impl VoxelObject {
 		}
 		self.volumes.clear();
 		self.active = 0;
-		self.create_volume();
 	}
 }

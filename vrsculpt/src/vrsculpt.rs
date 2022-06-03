@@ -41,7 +41,6 @@ impl VRSculpt {
 		};
 		self.controls = Some(VRControls::new(arvr_origin));
 		self.create_object(owner);
-		self.active = Some(0);
 	}
 	
 	#[export]
@@ -57,11 +56,66 @@ impl VRSculpt {
 		}
 	}
 
+	#[export]
 	fn create_object(&mut self, owner: &Node) {
 		let mut object = VoxelObject::new();
 		object.create_volume();
+		self.add_object(owner, object);
+	}
+	
+	#[export]
+	fn load_object(&mut self, owner: &Node, name: String) {
+		if let Some(object) = VoxelObject::load(&name) {
+			self.add_object(owner, object);
+		}
+	}
+
+	#[export]
+	fn export_object(&self, _owner: &Node) {
+		if let Some(object) = self.active_object() {
+			object.export();
+		}
+	}
+
+	#[export]
+	fn save_object(&self, _owner: &Node) {
+		if let Some(object) = self.active_object() {
+			object.save();
+		}
+	}
+
+	#[export]
+	fn remove_object(&mut self, _owner: &Node) {
+		if let Some(index) = self.active {
+			self.objects.remove(index);
+			self.update_active_index();
+		}
+	}
+
+	fn update_active_index(&mut self) {
+		if self.objects.is_empty() {
+			self.active = None;
+		}
+		else if let Some(index) = self.active {
+			self.active = Some(index.min(self.objects.len() - 1));
+		}
+		else {
+			self.active = Some(0);
+		}
+		
+	}
+
+	fn active_object(&self) -> Option<&VoxelObject> {
+		if let Some(index) = self.active {
+			return Some(&self.objects[index]);
+		}
+		None
+	}
+	
+	fn add_object(&mut self, owner: &Node, object: VoxelObject) {
 		owner.add_child(object.node(), true);
 		self.objects.push(object);
+		self.active = Some(self.objects.len() - 1);
 	}
 }
 
