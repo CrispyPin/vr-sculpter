@@ -44,7 +44,7 @@ impl VRSculpt {
 	}
 	
 	#[export]
-	fn _process(&mut self, _owner: &Node) {
+	fn _process(&mut self, _owner: &Node, _delta: f64) {
 		for obj in self.objects.iter_mut() {
 			obj.update_meshes();
 		}
