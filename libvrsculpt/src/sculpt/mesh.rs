@@ -14,11 +14,8 @@ const CORNERS: [VPos; 8] = [
 ];
 
 pub fn generate(chunks: ChunkBox2, offset: Vector3, surface_level: Voxel) -> Option<VariantArray> {
-	let mut vertexes: PoolArray<Vector3> = PoolArray::new();
-	let mut normals: PoolArray<Vector3> = PoolArray::new();
-
-	let mut vert_space = 0usize;
-	let mut vert_count = 0usize;
+	let mut vertexes = Vec::new();
+	let mut normals = Vec::new();
 
 	for x in 0..WIDTH {
 		for y in 0..WIDTH {
@@ -53,14 +50,6 @@ pub fn generate(chunks: ChunkBox2, offset: Vector3, surface_level: Voxel) -> Opt
 					}
 				}
 
-				if vert_space - vert_count < 15 {
-					vert_space += 45;
-					vertexes.resize(vert_space as i32);
-					normals.resize(vert_space as i32);
-				}
-				let mut vert_w = vertexes.write();
-				let mut normals_w = normals.write();
-
 				let triangles = TRIANGLES[cube_state as usize];
 				let mut i = 0;
 				let pos = (x as i8, y as i8, z as i8).vector() + offset;
@@ -68,31 +57,27 @@ pub fn generate(chunks: ChunkBox2, offset: Vector3, surface_level: Voxel) -> Opt
 					let vert_a = vertlist[triangles[i] as usize];
 					let vert_b = vertlist[triangles[i + 1] as usize];
 					let vert_c = vertlist[triangles[i + 2] as usize];
-					vert_w[vert_count] = vert_c + pos;
-					vert_w[vert_count + 1] = vert_b + pos;
-					vert_w[vert_count + 2] = vert_a + pos;
+					vertexes.push(vert_c + pos);
+					vertexes.push(vert_b + pos);
+					vertexes.push(vert_a + pos);
 					let normal = (vert_a - vert_c).cross(vert_b - vert_c);
-					normals_w[vert_count] = normal;
-					normals_w[vert_count + 1] = normal;
-					normals_w[vert_count + 2] = normal;
-					vert_count += 3;
+					normals.push(normal);
+					normals.push(normal);
+					normals.push(normal);
 					i += 3;
 				}
 			}
 		}
 	}
 
-	if vert_count == 0 {
+	if vertexes.is_empty() {
 		return None;
 	}
 
-	vertexes.resize(vert_count as i32);
-	normals.resize(vert_count as i32);
-
 	let mesh_data = VariantArray::new_thread_local();
 	mesh_data.resize(Mesh::ARRAY_MAX as i32);
-	mesh_data.set(Mesh::ARRAY_VERTEX as i32, &vertexes);
-	mesh_data.set(Mesh::ARRAY_NORMAL as i32, &normals);
+	mesh_data.set(Mesh::ARRAY_VERTEX as i32, vertexes);
+	mesh_data.set(Mesh::ARRAY_NORMAL as i32, normals);
 	Some(unsafe { mesh_data.assume_unique().into_shared() })
 }
 
