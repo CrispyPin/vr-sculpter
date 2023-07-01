@@ -1,4 +1,4 @@
-use gdnative::{prelude::*, api::Mesh};
+use gdnative::{api::Mesh, prelude::*};
 
 use super::chunk::*;
 
@@ -12,7 +12,6 @@ const CORNERS: [VPos; 8] = [
 	(1, 0, 0),
 	(0, 0, 0),
 ];
-
 
 pub fn generate(chunks: ChunkBox2, offset: Vector3, surface_level: Voxel) -> Option<VariantArray> {
 	let mut vertexes: PoolArray<Vector3> = PoolArray::new();
@@ -40,42 +39,18 @@ pub fn generate(chunks: ChunkBox2, offset: Vector3, surface_level: Voxel) -> Opt
 				let edge_mask = EDGEMASK[cube_state as usize];
 				let mut vertlist = [Vector3::ZERO; 12];
 
-				/* Find the vertices where the surface intersects the cube */
-				if edge_mask & 1 != 0 {
-					vertlist[0] = interpolate_vert(surface_level, CORNERS[0], CORNERS[1], cube_values[0], cube_values[1]);
-				}
-				if edge_mask & 2 != 0 {
-					vertlist[1] = interpolate_vert(surface_level, CORNERS[1], CORNERS[2], cube_values[1], cube_values[2]);
-				}
-				if edge_mask & 4 != 0 {
-					vertlist[2] = interpolate_vert(surface_level, CORNERS[2], CORNERS[3], cube_values[2], cube_values[3]);
-				}
-				if edge_mask & 8 != 0 {
-					vertlist[3] = interpolate_vert(surface_level, CORNERS[3], CORNERS[0], cube_values[3], cube_values[0]);
-				}
-				if edge_mask & 16 != 0 {
-					vertlist[4] = interpolate_vert(surface_level, CORNERS[4], CORNERS[5], cube_values[4], cube_values[5]);
-				}
-				if edge_mask & 32 != 0 {
-					vertlist[5] = interpolate_vert(surface_level, CORNERS[5], CORNERS[6], cube_values[5], cube_values[6]);
-				}
-				if edge_mask & 64 != 0 {
-					vertlist[6] = interpolate_vert(surface_level, CORNERS[6], CORNERS[7], cube_values[6], cube_values[7]);
-				}
-				if edge_mask & 128 != 0 {
-					vertlist[7] = interpolate_vert(surface_level, CORNERS[7], CORNERS[4], cube_values[7], cube_values[4]);
-				}
-				if edge_mask & 256 != 0 {
-					vertlist[8] = interpolate_vert(surface_level, CORNERS[0], CORNERS[4], cube_values[0], cube_values[4]);
-				}
-				if edge_mask & 512 != 0 {
-					vertlist[9] = interpolate_vert(surface_level, CORNERS[1], CORNERS[5], cube_values[1], cube_values[5]);
-				}
-				if edge_mask & 1024 != 0 {
-					vertlist[10] = interpolate_vert(surface_level, CORNERS[2], CORNERS[6], cube_values[2], cube_values[6]);
-				}
-				if edge_mask & 2048 != 0 {
-					vertlist[11] = interpolate_vert(surface_level, CORNERS[3], CORNERS[7], cube_values[3], cube_values[7]);
+				// Find the interpolated position of vertices for each edge
+				for n in 0..12 {
+					if edge_mask & (1 << n) != 0 {
+						let corner_index_a = n % 8;
+						let corner_index_b = [1, 2, 3, 0, 5, 6, 7, 4, 4, 5, 6, 7][n];
+						let corner_a = CORNERS[corner_index_a];
+						let corner_b = CORNERS[corner_index_b];
+						let value_a = cube_values[corner_index_a];
+						let value_b = cube_values[corner_index_b];
+						vertlist[n] =
+							interpolate_vert(surface_level, corner_a, corner_b, value_a, value_b)
+					}
 				}
 
 				if vert_space - vert_count < 15 {
@@ -85,22 +60,21 @@ pub fn generate(chunks: ChunkBox2, offset: Vector3, surface_level: Voxel) -> Opt
 				}
 				let mut vert_w = vertexes.write();
 				let mut normals_w = normals.write();
-				
 
 				let triangles = TRIANGLES[cube_state as usize];
 				let mut i = 0;
 				let pos = (x as i8, y as i8, z as i8).vector() + offset;
 				while triangles[i] != 255 {
-					let vert_a = vertlist[triangles[i  ] as usize];
-					let vert_b = vertlist[triangles[i+1] as usize];
-					let vert_c = vertlist[triangles[i+2] as usize];
-					vert_w[vert_count  ] = vert_c + pos;
-					vert_w[vert_count+1] = vert_b + pos;
-					vert_w[vert_count+2] = vert_a + pos;
+					let vert_a = vertlist[triangles[i] as usize];
+					let vert_b = vertlist[triangles[i + 1] as usize];
+					let vert_c = vertlist[triangles[i + 2] as usize];
+					vert_w[vert_count] = vert_c + pos;
+					vert_w[vert_count + 1] = vert_b + pos;
+					vert_w[vert_count + 2] = vert_a + pos;
 					let normal = (vert_a - vert_c).cross(vert_b - vert_c);
-					normals_w[vert_count  ] = normal; 
-					normals_w[vert_count+1] = normal;
-					normals_w[vert_count+2] = normal;
+					normals_w[vert_count] = normal;
+					normals_w[vert_count + 1] = normal;
+					normals_w[vert_count + 2] = normal;
 					vert_count += 3;
 					i += 3;
 				}
@@ -122,8 +96,13 @@ pub fn generate(chunks: ChunkBox2, offset: Vector3, surface_level: Voxel) -> Opt
 	Some(unsafe { mesh_data.assume_unique().into_shared() })
 }
 
-
-fn interpolate_vert(surface_level: Voxel, corner_a: VPos, corner_b: VPos, value_a: Voxel, value_b: Voxel) -> Vector3 {
+fn interpolate_vert(
+	surface_level: Voxel,
+	corner_a: VPos,
+	corner_b: VPos,
+	value_a: Voxel,
+	value_b: Voxel,
+) -> Vector3 {
 	// return (corner_a.vector() + corner_b.vector()) / 2.0;
 	// if value_a == surface_level { return corner_a.vector() }
 	// if value_b == surface_level { return corner_b.vector() }
@@ -132,7 +111,7 @@ fn interpolate_vert(surface_level: Voxel, corner_a: VPos, corner_b: VPos, value_
 	let surface_level = surface_level as f32 / 255.0;
 	let value_a = value_a as f32 / 255.0;
 	let value_b = value_b as f32 / 255.0;
-	
+
 	let delta = (surface_level - value_a) / (value_b - value_a);
 
 	let pos_a = corner_a.vector();
@@ -140,6 +119,7 @@ fn interpolate_vert(surface_level: Voxel, corner_a: VPos, corner_b: VPos, value_
 	pos_a + delta * (pos_b - pos_a)
 }
 
+#[rustfmt::skip]
 const EDGEMASK: [u16; 256]=[
 	0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
 	0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,
@@ -175,6 +155,7 @@ const EDGEMASK: [u16; 256]=[
 	0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x0
 ];
 
+#[rustfmt::skip]
 const TRIANGLES: [[u8; 16]; 256] = [
 	[255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
 	[0, 8, 3, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],

@@ -1,11 +1,11 @@
 use gdnative::{api::OS, prelude::*};
 use std::fs::{self, File};
-use std::io::{Write, Read};
+use std::io::{Read, Write};
 use std::path::PathBuf;
 
+use super::chunk::*;
 use super::exporter::*;
 use super::volume::*;
-use super::chunk::*;
 
 const SAVE_DATA_VERSION: u16 = 1;
 const SAVE_FILE: &str = "object.meta";
@@ -46,11 +46,11 @@ impl VoxelObject {
 			v.mesh_modified();
 		}
 	}
-	
+
 	pub fn set_sphere(&mut self, pos: Vector3, radius: f32, value: Voxel) {
 		self.volumes[self.active].set_sphere(pos, radius, value);
 	}
-	
+
 	pub fn smooth_sphere(&mut self, pos: Vector3, radius: f32) {
 		self.volumes[self.active].smooth(pos, radius);
 	}
@@ -67,7 +67,7 @@ impl VoxelObject {
 			Err(err) => {
 				godot_print!("Error saving file: {}", err);
 				return;
-			},
+			}
 			Ok(file) => file,
 		};
 
@@ -81,7 +81,7 @@ impl VoxelObject {
 		}
 	}
 
-	pub fn load(name: &str) -> Option<Self>{
+	pub fn load(name: &str) -> Option<Self> {
 		let mut new = Self::new();
 		let path = new.saves_path.join(name);
 		if !path.join(SAVE_FILE).exists() {
@@ -89,7 +89,7 @@ impl VoxelObject {
 			return None;
 		}
 		new.name = name.to_owned();
-		
+
 		let mut indexfile = File::open(path.join(SAVE_FILE)).unwrap();
 
 		let mut data = Vec::new();
@@ -122,7 +122,7 @@ impl VoxelObject {
 	pub fn create_volume(&mut self) {
 		self.add_volume(Volume::new());
 	}
-	
+
 	pub fn add_volume(&mut self, volume: Volume) {
 		unsafe {
 			self.node.assume_safe().add_child(volume.node(), true);
@@ -140,7 +140,9 @@ impl VoxelObject {
 
 	pub fn clear(&mut self) {
 		for volume in &self.volumes {
-			unsafe{ volume.node().assume_safe().queue_free(); }
+			unsafe {
+				volume.node().assume_safe().queue_free();
+			}
 		}
 		self.volumes.clear();
 		self.active = 0;

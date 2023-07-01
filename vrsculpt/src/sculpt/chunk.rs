@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use gdnative::prelude::*;
+use std::collections::HashMap;
 
 use super::volume::ChunkLoc;
 use super::volume::ChunkLocT;
@@ -13,23 +13,19 @@ pub const VOLUME: usize = WIDTH * AREA;
 pub type Voxel = u8;
 pub type VPos = (i8, i8, i8);
 
-
 /// 2x2x2 chunk references
 pub struct ChunkBox2<'a> {
-	contents: [Option<&'a Chunk>; 8]
+	contents: [Option<&'a Chunk>; 8],
 }
-
 
 /// 3x3x3 chunk references
 pub struct ChunkBox3<'a> {
-	contents: [Option<&'a Chunk>; 27]
+	contents: [Option<&'a Chunk>; 27],
 }
-
 
 pub struct Chunk {
 	pub voxels: Box<[Voxel; VOLUME]>,
 }
-
 
 impl Chunk {
 	pub fn new() -> Self {
@@ -37,7 +33,7 @@ impl Chunk {
 			voxels: vec![0u8; VOLUME].into_boxed_slice().try_into().unwrap(),
 		}
 	}
-	
+
 	pub fn set_sphere(&mut self, center: Vector3, radius: f32, value: Voxel) {
 		for i in 0..VOLUME {
 			let pos = VPos::from_index(i).vector();
@@ -45,14 +41,12 @@ impl Chunk {
 			let surface_dist = dist - radius;
 			if surface_dist < 0.0 {
 				self.voxels[i] = value;
-			}
-			else if surface_dist < 1.0 {
+			} else if surface_dist < 1.0 {
 				let old = self.voxels[i];
 				if old < value {
 					let interpolated_value = lerp(old, value, 1.0 - surface_dist);
 					self.voxels[i] = interpolated_value;
-				}
-				else {
+				} else {
 					let interpolated_value = lerp(value, old, surface_dist);
 					self.voxels[i] = interpolated_value;
 				}
@@ -76,8 +70,7 @@ impl Chunk {
 				new_val += old.get(pos.add((0, 0, -1))) as u16;
 				new_val /= 7;
 				new.voxels[i] = old_val.max(new_val as Voxel);
-			}
-			else {
+			} else {
 				new.voxels[i] = old_val;
 			}
 		}
@@ -94,21 +87,21 @@ impl Chunk {
 fn lerp(a: u8, b: u8, t: f32) -> u8 {
 	a + (t * (b - a) as f32) as u8
 }
-  
 
 impl<'a> ChunkBox2<'a> {
 	pub fn new(chunks: &'a HashMap<ChunkLoc, Chunk>, loc: ChunkLoc) -> Self {
 		Self {
 			contents: [
-			chunks.get(&loc),
-			chunks.get(&loc.add((1, 0, 0))),
-			chunks.get(&loc.add((0, 1, 0))),
-			chunks.get(&loc.add((1, 1, 0))),
-			chunks.get(&loc.add((0, 0, 1))),
-			chunks.get(&loc.add((1, 0, 1))),
-			chunks.get(&loc.add((0, 1, 1))),
-			chunks.get(&loc.add((1, 1, 1))),
-		]}
+				chunks.get(&loc),
+				chunks.get(&loc.add((1, 0, 0))),
+				chunks.get(&loc.add((0, 1, 0))),
+				chunks.get(&loc.add((1, 1, 0))),
+				chunks.get(&loc.add((0, 0, 1))),
+				chunks.get(&loc.add((1, 0, 1))),
+				chunks.get(&loc.add((0, 1, 1))),
+				chunks.get(&loc.add((1, 1, 1))),
+			],
+		}
 	}
 
 	pub fn get(&self, pos: VPos) -> Voxel {
@@ -123,7 +116,7 @@ impl<'a> ChunkBox2<'a> {
 			(1, 0, 1) => 5,
 			(0, 1, 1) => 6,
 			(1, 1, 1) => 7,
-			_ => panic!("ChunkBox2 bounds exceeded")
+			_ => panic!("ChunkBox2 bounds exceeded"),
 		};
 		if let Some(chunk) = self.contents[index] {
 			return chunk.get_unchecked(local_pos);
@@ -131,7 +124,6 @@ impl<'a> ChunkBox2<'a> {
 		0
 	}
 }
-
 
 impl<'a> ChunkBox3<'a> {
 	pub fn new(chunks: &'a HashMap<ChunkLoc, Chunk>, loc: ChunkLoc) -> Self {
@@ -164,7 +156,8 @@ impl<'a> ChunkBox3<'a> {
 				chunks.get(&loc.add((-1, 1, 1))),
 				chunks.get(&loc.add((0, 1, 1))),
 				chunks.get(&loc.add((1, 1, 1))),
-		]}
+			],
+		}
 	}
 
 	pub fn get(&self, pos: VPos) -> Voxel {
@@ -197,7 +190,7 @@ impl<'a> ChunkBox3<'a> {
 			(-1, 1, 1) => 24,
 			(0, 1, 1) => 25,
 			(1, 1, 1) => 26,
-			_ => panic!("ChunkBox3 bounds exceeded")
+			_ => panic!("ChunkBox3 bounds exceeded"),
 		};
 		if let Some(chunk) = self.contents[index] {
 			let local_pos = pos.posmod(WIDTH_I8);
@@ -206,7 +199,6 @@ impl<'a> ChunkBox3<'a> {
 		0
 	}
 }
-
 
 pub trait VPosT {
 	fn index(&self) -> usize;
@@ -223,25 +215,26 @@ pub trait VPosT {
 impl VPosT for VPos {
 	#[inline]
 	fn index(&self) -> usize {
-		self.0 as usize * AREA
-		+ self.1 as usize * WIDTH
-		+ self.2 as usize
+		self.0 as usize * AREA + self.1 as usize * WIDTH + self.2 as usize
 	}
 
 	#[inline]
-	fn from_index(index: usize) -> Self{
+	fn from_index(index: usize) -> Self {
 		(
 			(index / AREA) as i8,
 			(index / WIDTH % WIDTH) as i8,
-			(index % WIDTH) as i8
+			(index % WIDTH) as i8,
 		)
 	}
 
 	#[inline]
 	fn in_bounds(&self) -> bool {
-		self.0 >= 0 && self.0 < WIDTH_I8 &&
-		self.1 >= 0 && self.1 < WIDTH_I8 &&
-		self.2 >= 0 && self.2 < WIDTH_I8
+		self.0 >= 0
+			&& self.0 < WIDTH_I8
+			&& self.1 >= 0
+			&& self.1 < WIDTH_I8
+			&& self.2 >= 0
+			&& self.2 < WIDTH_I8
 	}
 
 	#[inline]
@@ -256,7 +249,11 @@ impl VPosT for VPos {
 
 	#[inline]
 	fn div(&self, other: i8) -> Self {
-		(self.0.div_euclid(other), self.1.div_euclid(other), self.2.div_euclid(other))
+		(
+			self.0.div_euclid(other),
+			self.1.div_euclid(other),
+			self.2.div_euclid(other),
+		)
 	}
 
 	#[inline]

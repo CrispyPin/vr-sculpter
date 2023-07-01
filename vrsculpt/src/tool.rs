@@ -1,7 +1,9 @@
-use gdnative::{prelude::*, api::{ARVRController, GlobalConstants}};
+use gdnative::{
+	api::{ARVRController, GlobalConstants},
+	prelude::*,
+};
 
 use crate::sculpt::voxel_object::VoxelObject;
-
 
 pub struct ToolHand {
 	tools: Vec<Tool>,
@@ -58,17 +60,15 @@ impl ToolHand {
 		let pos = controller.translation();
 		self.apply(object, trigger, pos);
 
-
 		let joy_x = controller.get_joystick_axis(GlobalConstants::JOY_AXIS_0);
-		if joy_x.abs() < 0.3{
+		if joy_x.abs() < 0.3 {
 			self.sel_x = false;
 		}
 		if !self.sel_x {
 			if joy_x > 0.8 {
 				self.next();
 				self.sel_x = true;
-			}
-			else if joy_x < -0.8 {
+			} else if joy_x < -0.8 {
 				self.prev();
 				self.sel_x = true;
 			}
@@ -84,13 +84,13 @@ impl ToolHand {
 		match tool.action {
 			ToolType::Add => {
 				target.set_sphere(pos, radius, 255);
-			},
+			}
 			ToolType::Erase => {
 				target.set_sphere(pos, radius, 0);
-			},
+			}
 			ToolType::Smooth => {
 				target.smooth_sphere(pos, radius);
-			},
+			}
 		};
 		if tool.smooth {
 			target.smooth_sphere(pos, radius + 2.0);
@@ -102,13 +102,12 @@ impl ToolHand {
 	}
 }
 
-
 impl Tool {
 	fn new(action: ToolType, smooth: bool) -> Self {
 		Self {
 			action,
 			radius: 5.0,
-			smooth
+			smooth,
 		}
 	}
 }

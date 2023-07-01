@@ -1,6 +1,16 @@
-use gdnative::{prelude::*, api::{MeshInstance, ArrayMesh, Material, Mesh}};
+use gdnative::{
+	api::{ArrayMesh, Material, Mesh, MeshInstance},
+	prelude::*,
+};
 use rayon::prelude::*;
-use std::{collections::HashMap, mem::{self, transmute_copy, size_of}, time::Instant, path::Path, fs::File, io::{Write, Read}};
+use std::{
+	collections::HashMap,
+	fs::File,
+	io::{Read, Write},
+	mem::{self, size_of, transmute_copy},
+	path::Path,
+	time::Instant,
+};
 
 use super::chunk::*;
 use super::mesh;
@@ -12,7 +22,6 @@ const FILE_HEADER: &[u8] = b"voxel volume data";
 
 pub type ChunkLoc = (i16, i16, i16);
 
-
 pub struct Volume {
 	chunks: HashMap<ChunkLoc, Chunk>,
 	surface_indexes: HashMap<ChunkLoc, i64>,
@@ -23,13 +32,12 @@ pub struct Volume {
 	material: Option<Ref<Material>>,
 }
 
-
 impl Volume {
 	pub fn new() -> Self {
 		let mesh = ArrayMesh::new().into_shared();
 		let mesh_node = unsafe { MeshInstance::new().into_shared().assume_safe() };
 		mesh_node.set_mesh(&mesh);
-		
+
 		Self {
 			chunks: HashMap::new(),
 			surface_indexes: HashMap::new(),
@@ -45,7 +53,7 @@ impl Volume {
 		self.node
 	}
 
-	pub fn get_mesh(&self) -> TRef<ArrayMesh>{
+	pub fn get_mesh(&self) -> TRef<ArrayMesh> {
 		unsafe { self.mesh.assume_safe() }
 	}
 
@@ -64,25 +72,31 @@ impl Volume {
 
 		let locs = locs_in_sphere(pos, radius);
 
-		let new_chunks: Vec<Option<(&ChunkLoc, Chunk)>> = locs.par_iter().map(|loc| {
-			if !self.chunks.contains_key(loc) {
-				return None;
-			}
-			let local_pos = pos - loc.as_wpos();
-			let neighbors = ChunkBox3::new(&self.chunks, *loc);
-			let new_chunk = Chunk::smooth_sphere(neighbors, local_pos, radius);
-			Some((loc, new_chunk))
-		}).collect();
+		let new_chunks: Vec<Option<(&ChunkLoc, Chunk)>> = locs
+			.par_iter()
+			.map(|loc| {
+				if !self.chunks.contains_key(loc) {
+					return None;
+				}
+				let local_pos = pos - loc.as_wpos();
+				let neighbors = ChunkBox3::new(&self.chunks, *loc);
+				let new_chunk = Chunk::smooth_sphere(neighbors, local_pos, radius);
+				Some((loc, new_chunk))
+			})
+			.collect();
 
 		for (&loc, chunk) in new_chunks.into_iter().flatten() {
 			self.chunks.insert(loc, chunk);
 			self.modified.push(loc);
 		}
 		if DEBUG_SMOOTH_TIMES {
-			godot_print!("smoothing took: {}ms", start.elapsed().as_micros() as f32 / 1000.0);
+			godot_print!(
+				"smoothing took: {}ms",
+				start.elapsed().as_micros() as f32 / 1000.0
+			);
 		}
 	}
-	
+
 	pub fn mesh_modified(&mut self) {
 		let start = Instant::now();
 		let array_mesh: TRef<ArrayMesh> = unsafe { self.mesh.assume_safe() };
@@ -93,41 +107,52 @@ impl Volume {
 		let mut modified = mem::take(&mut self.modified);
 		modified.sort_unstable();
 		modified.dedup();
-		
+
 		for loc in &modified {
 			if self.surface_indexes.contains_key(loc) {
 				// "move" indexes down one if they come after this surface, since it will be removed
 				let &i = self.surface_indexes.get(loc).unwrap();
-				
-				self.surface_indexes.values_mut().for_each(|x: &mut i64|
+
+				self.surface_indexes.values_mut().for_each(|x: &mut i64| {
 					if *x > i {
 						*x -= 1;
 					}
-				);
+				});
 				// remove this chunks surface
 				self.surface_indexes.remove(loc);
 				array_mesh.surface_remove(i);
 			}
 		}
-		let meshes:Vec<(ChunkLoc, Option<VariantArray>)> = modified.par_iter().map(|&loc| {
-			let offset = loc.as_wpos();
-			let chunks = ChunkBox2::new(&self.chunks, loc);
-			(loc, mesh::generate(chunks, offset, self.surface_level))
-		}).collect();
-		
+		let meshes: Vec<(ChunkLoc, Option<VariantArray>)> = modified
+			.par_iter()
+			.map(|&loc| {
+				let offset = loc.as_wpos();
+				let chunks = ChunkBox2::new(&self.chunks, loc);
+				(loc, mesh::generate(chunks, offset, self.surface_level))
+			})
+			.collect();
+
 		let mesh = unsafe { self.mesh.assume_safe() };
 		for mesh_data in meshes {
 			if let (loc, Some(mesh_arr)) = mesh_data {
 				self.surface_indexes.insert(loc, mesh.get_surface_count());
-				mesh.add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, mesh_arr, VariantArray::new_shared(), 0);
+				mesh.add_surface_from_arrays(
+					Mesh::PRIMITIVE_TRIANGLES,
+					mesh_arr,
+					VariantArray::new_shared(),
+					0,
+				);
 			}
 		}
 		if DEBUG_MESH_TIMES {
-			godot_print!("meshes took: {}ms", start.elapsed().as_micros() as f32 / 1000.0);
+			godot_print!(
+				"meshes took: {}ms",
+				start.elapsed().as_micros() as f32 / 1000.0
+			);
 		}
 	}
 
-	fn ensure_chunk(&mut self, loc: ChunkLoc) -> &mut Chunk{
+	fn ensure_chunk(&mut self, loc: ChunkLoc) -> &mut Chunk {
 		if !self.chunks.contains_key(&loc) {
 			self.create_chunk(loc);
 		}
@@ -162,7 +187,7 @@ impl Volume {
 			Err(e) => {
 				godot_print!("Error loading volume {}: {}", index, e);
 				return None;
-			},
+			}
 		};
 
 		let mut header = [0; FILE_HEADER.len()];
@@ -192,7 +217,9 @@ impl Volume {
 			let loc = ChunkLoc::from_bytes(loc_bytes);
 
 			file.read_exact(&mut voxel_data).unwrap();
-			let chunk = Chunk { voxels: Box::new(voxel_data) };
+			let chunk = Chunk {
+				voxels: Box::new(voxel_data),
+			};
 			new_volume.chunks.insert(loc, chunk);
 			new_volume.modified.push(loc);
 			chunks += 1;
@@ -202,7 +229,6 @@ impl Volume {
 		Some(new_volume)
 	}
 }
-
 
 fn locs_in_sphere(wpos: Vector3, radius: f32) -> Vec<ChunkLoc> {
 	let center = ChunkLoc::from_wpos(wpos);
@@ -223,11 +249,11 @@ fn locs_in_sphere(wpos: Vector3, radius: f32) -> Vec<ChunkLoc> {
 	}
 	fn dist_to_chunk(relative_pos: Vector3) -> f32 {
 		let q = relative_pos.abs() - Vector3::ONE * WIDTH_F * 0.5;
-		Vector3::new(q.x.max(0.0), q.y.max(0.0), q.z.max(0.0)).length() + q.y.max(q.z).max(q.x).min(0.0)
+		Vector3::new(q.x.max(0.0), q.y.max(0.0), q.z.max(0.0)).length()
+			+ q.y.max(q.z).max(q.x).min(0.0)
 	}
 	locations
 }
-
 
 pub trait ChunkLocT {
 	fn from_wpos(wpos: Vector3) -> Self;
@@ -243,15 +269,15 @@ impl ChunkLocT for ChunkLoc {
 		let p = (wpos / WIDTH_F).floor();
 		(p.x as i16, p.y as i16, p.z as i16)
 	}
-	
+
 	fn as_wpos(&self) -> Vector3 {
 		Vector3::new(
 			self.0 as f32 * WIDTH_F,
 			self.1 as f32 * WIDTH_F,
-			self.2 as f32 * WIDTH_F
+			self.2 as f32 * WIDTH_F,
 		)
 	}
-	
+
 	#[inline]
 	fn add(&self, other: Self) -> Self {
 		(self.0 + other.0, self.1 + other.1, self.2 + other.2)

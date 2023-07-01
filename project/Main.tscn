@@ -35,7 +35,6 @@ transform = Transform( 0.707107, 0.40558, -0.579228, 0, 0.819152, 0.573577, 0.70
 
 [node name="MeshInstance" type="MeshInstance" parent="Camera"]
 mesh = SubResource( 7 )
-material/0 = null
 
 [node name="DebugUI" type="PanelContainer" parent="."]
 margin_right = 14.0
@@ -76,19 +75,19 @@ margin_right = 188.0
 margin_bottom = 66.0
 alignment = 1
 
-[node name="Button" type="Button" parent="DebugUI/VBoxContainer/HBoxContainer2"]
+[node name="Save" type="Button" parent="DebugUI/VBoxContainer/HBoxContainer2"]
 margin_left = 23.0
 margin_right = 64.0
 margin_bottom = 20.0
 text = "save"
 
-[node name="Button2" type="Button" parent="DebugUI/VBoxContainer/HBoxContainer2"]
+[node name="Load" type="Button" parent="DebugUI/VBoxContainer/HBoxContainer2"]
 margin_left = 68.0
 margin_right = 107.0
 margin_bottom = 20.0
 text = "load"
 
-[node name="Button3" type="Button" parent="DebugUI/VBoxContainer/HBoxContainer2"]
+[node name="Export" type="Button" parent="DebugUI/VBoxContainer/HBoxContainer2"]
 margin_left = 111.0
 margin_right = 164.0
 margin_bottom = 20.0
@@ -110,7 +109,6 @@ far = 1000.0
 
 [node name="MeshInstance" type="MeshInstance" parent="VRViewport/ARVROrigin/VRLeft"]
 mesh = SubResource( 8 )
-material/0 = null
 
 [node name="VRRight" type="ARVRController" parent="VRViewport/ARVROrigin"]
 controller_id = 2
@@ -118,7 +116,6 @@ controller_id = 2
 [node name="MeshInstance" type="MeshInstance" parent="VRViewport/ARVROrigin/VRRight"]
 mesh = SubResource( 8 )
 skeleton = NodePath("../../VRLeft")
-material/0 = null
 
 [node name="StartupMenu" type="PanelContainer" parent="."]
 anchor_left = 0.5
@@ -152,9 +149,9 @@ text = "Start debug"
 [node name="VRSculpt" type="Node" parent="."]
 script = ExtResource( 5 )
 
-[connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button" to="Camera/Interaction" method="_on_save_pressed"]
-[connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button2" to="Camera/Interaction" method="_on_load_pressed"]
-[connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Button3" to="Camera/Interaction" method="_on_export_pressed"]
+[connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Save" to="Camera/Interaction" method="_on_save_pressed"]
+[connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Load" to="Camera/Interaction" method="_on_load_pressed"]
+[connection signal="pressed" from="DebugUI/VBoxContainer/HBoxContainer2/Export" to="Camera/Interaction" method="_on_export_pressed"]
 [connection signal="pressed" from="StartupMenu/HBoxContainer/VR" to="." method="_on_VR_pressed"]
 [connection signal="pressed" from="StartupMenu/HBoxContainer/Debug" to="." method="_on_Debug_pressed"]
 
